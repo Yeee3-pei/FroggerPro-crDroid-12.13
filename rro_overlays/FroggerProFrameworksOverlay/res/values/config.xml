@@ -89,37 +89,29 @@
     <!-- Whether the Unprocessed audio source supports the required frequency range and level -->
     <bool name="config_supportAudioSourceUnprocessed">true</bool>
 
-    <!-- ★★2026-10-08：相機／麥克風隱私開關的支援旗標 ✗（使用者回報「按鍵不能用」✗）★★
+    <!-- Camera and microphone privacy toggles.
 
-         真因 ✓（全部有原始碼原文 ✗）：
-           AOSP 預設【兩者皆 false ✗】：
-             frameworks/base/core/res/res/values/config.xml:6924
-               <bool name="config_supportsMicToggle">false</bool>
-             frameworks/base/core/res/res/values/config.xml:6926
-               <bool name="config_supportsCamToggle">false</bool>
-           ⇒ SensorPrivacyService.setToggleSensorPrivacy 會【直接 return ✗ 不報錯 ✗】：
-             …/services/core/java/com/android/server/sensorprivacy/SensorPrivacyService.java:839
-               if (enable && !supportsSensorToggle(TOGGLE_TYPE_SOFTWARE, sensor)) {
-                   // Do not enable sensor privacy if the device doesn't support it
-                   return;
-               }
-           ⇒ ★任何「開啟」請求被靜默丟棄 ✗★
+         AOSP defaults both flags to false:
+             frameworks/base/core/res/res/values/config.xml
+                 <bool name="config_supportsMicToggle">false</bool>
+                 <bool name="config_supportsCamToggle">false</bool>
+         With them false, SensorPrivacyService drops every enable request without an
+         error:
+             frameworks/base/services/core/java/com/android/server/sensorprivacy/SensorPrivacyService.java
+                 if (enable && !supportsSensorToggle(TOGGLE_TYPE_SOFTWARE, sensor)) {
+                     // Do not enable sensor privacy if the device doesn't support it
+                     return;
+                 }
+         That is why the privacy app's camera and microphone switch had no effect, and why
+         /data/system/sensor_privacy.xml never gained a state entry.
 
-         實機症狀 ✓（全部對上 ✗）：
-           ① 我方隱私 App 的「封鎖相機與麥克風」開關 → 無效果 ✗
-           ② 系統自己的 `cmd sensor_privacy enable 0 camera` → 回報成功但無效果 ✗
-           ③ /data/system/sensor_privacy.xml 與 sensor_privacy_impl.xml
-              mtime 停在開機時刻（15:41）⇒ ★從未產生任何 state 條目 ✗★
-           ④ dumpsys sensor_privacy 幾乎空白 ✗（只有 storage_implementation ✓）
+         The hardware does support it: this overlay already defines
+         config_cameraPrivacyLightColors, the camera privacy indicator light. These two
+         overrides were simply missed when the overlay was ported.
 
-         為何確定硬體支援 ✓：
-           ★同一個檔案內已定義 config_cameraPrivacyLightColors ✗（相機隱私指示燈 ✓）
-           ⇒ 這是【移植時漏掉的覆寫】✗ 不是硬體不支援 ✓★
-
-         ⚠️ 注意 ✗：AOSP 另有 config_sensorPrivacyRequiresAuthentication = true ✓
-            ⇒ 只在【裝置鎖定時】才要求驗證 ✓（SensorPrivacyService.java:1099-1100 ✓）
-            ⇒ 解鎖狀態下不受影響 ✓
-    -->
+         Note: AOSP also sets config_sensorPrivacyRequiresAuthentication to true, so a
+         toggle only asks for authentication while the device is locked; it is unaffected
+         when the device is unlocked. -->
     <bool name="config_supportsCamToggle">true</bool>
     <bool name="config_supportsMicToggle">true</bool>
 
@@ -471,4 +463,9 @@
 
      <!-- The amount to scale fullscreen snapshots for Overview and snapshot starting windows. -->
      <item name="config_highResTaskSnapshotScale" format="float" type="dimen">0.7</item>
+    <!-- Nothing's Ndot dot-matrix font for the lock screen clock. The family is declared in
+         packages/overlays/Lineage/fonts/etc/fonts_customization.xml and the font files ship in
+         /product/fonts/ from this device tree. -->
+    <string name="config_clockFontFamily" translatable="false">ndot-57</string>
 </resources>
+<!-- Read. -->
