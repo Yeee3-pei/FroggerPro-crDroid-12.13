@@ -29,5 +29,23 @@ allow hal_face_default face_vendor_data_file:dir create;
 # Face HAL debug property.
 set_prop(hal_face_default, log_tag_prop)
 
+# Face HAL camera path. AOSP's hal_face_default rules only cover the virtual HAL, so the enrolment
+# camera never opens: the HAL is denied find on fwk_camera_service and read on camera_config_prop, then
+# aborts with "No front camera device detected" / "Failed to run InitCamera(), report -1" (logcat,
+# 2026-10-12). The stock vendor policy ships these rules; this copy restores the same set.
+allow hal_face_default cameraserver:binder { call transfer };
+allow hal_face_default cameraserver:fd use;
+allow hal_face_default fwk_camera_service:service_manager find;
+allow hal_face_default fwk_camera_hwservice:hwservice_manager find;
+allow hal_face_default hidl_token_hwservice:hwservice_manager find;
+allow hal_face_default camera_config_prop:file { read getattr map open };
+allow hal_face_default hal_graphics_allocator_default:binder call;
+allow hal_face_default hal_graphics_allocator_default:fd use;
+allow hal_face_default hal_graphics_mapper_hwservice:hwservice_manager find;
+
+# The SDK writes its database under facedata/sdk, which needs more than the rw_dir_perms AOSP grants.
+allow hal_face_default face_vendor_data_file:dir { create open read write search getattr add_name remove_name };
+allow hal_face_default face_vendor_data_file:file { create open read write getattr setattr append map unlink rename };
+
 # Not applied: hal_fingerprint_default default_prop and vendor_init bluetooth_prop are both
 # rejected by neverallow at build time.
