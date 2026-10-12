@@ -196,11 +196,11 @@ persist.vendor.rcs.singlereg.feature=1
 persist.radio.multisim.config=dsds
 persist.vendor.radio.apm_sim_not_pwdn=0
 persist.vendor.radio.custom_ecc=1
-# ★2026-10-08（使用者要求 1）：無 SIM 的待機耗電 ✗★
-#   實測（dumpsys batterystats ✓）：螢幕關閉/doze 段 316.5 mAh ✗ 其中 ★299 mAh 是 mobile_radio ✗★
-#   ⇒ 沒插 SIM（gsm.sim.state=ABSENT ✗）⇒ modem 持續全頻掃描／反覆註冊 ✗
-#   ★enableadvancedscan ★＝Qualcomm 的「進階／主動掃描」✗ ⇒ 沒 SIM 時尤其浪費 ✗
-#   改 false ⇒ 減少主動掃描 ✓（★效果需實測 ✗ 這是 Qualcomm 屬性 ✓ 無官方文件保證 ✓★）
+# Idle drain without a SIM: batterystats measured 316.5 mAh over the screen-off/doze window, of
+# which 299 mAh was mobile_radio. With gsm.sim.state=ABSENT the modem keeps scanning and
+# re-registering. enableadvancedscan is Qualcomm's active scan, which costs the most when no SIM
+# is present, so it is set to false. This is an undocumented Qualcomm property, so the reduction
+# is not guaranteed.
 persist.vendor.radio.enableadvancedscan=false
 persist.vendor.radio.procedure_bytes=SKIP
 persist.vendor.radio.sib16_support=1
@@ -245,14 +245,14 @@ vendor.wv.oemcrypto.debug.enable_prov40=true
 # Wi-Fi
 wifi.aware.interface=wifi-aware0
 
-# === C267 原廠 vendor props 移植（Nothing 旗標 ＋ Glyph ＋ 顯示曲線 ＋ 感測器）===
-# 來源: stock_ota/unpacked/vendor/build.prop ✓（原廠 371 條 ⇒ 我方原缺 133 條 ✓）
-# 用途:
-#   * ro.vendor.glyph.*        ⇒ Glyph 燈效參數（13x13 矩陣／169 通道／亮度曲線 ✓）
-#   * ro.vendor.display.array.* ⇒ 顯示亮度／HDR 曲線 ✓
-#   * ro.vendor.sensor.udlight_sensor.* ⇒ 螢幕下光感測器 ✓
-#   * ro.vendor.nothing.feature.* ⇒ Nothing 功能旗標位元遮罩 ✓
-# 回退: 刪掉本區塊即可 ✓
+# Stock vendor properties ported from the stock OTA's vendor/build.prop (371 entries there, of
+# which 133 were missing here), covering:
+#   * ro.vendor.glyph.*                   Glyph effect parameters (13x13 matrix, 169 channels,
+#                                         brightness curve)
+#   * ro.vendor.display.array.*           display brightness and HDR curves
+#   * ro.vendor.sensor.udlight_sensor.*   under-display light sensor
+#   * ro.vendor.nothing.feature.*         Nothing feature flag bitmask
+# Removing this block reverts them.
 
 ro.vendor.nothing.feature.base=0xe24800001004458438124a040106b4247b97ffL
 ro.vendor.nothing.feature.diff.device.Asteroids=0x240001a38fc01acc038d140ad44002d0842080L
@@ -310,7 +310,7 @@ ro.vendor.nothing.feature.diff.product.TetrisEEA=0x8000000000000000000000L
 ro.vendor.nothing.feature.diff.product.TetrisIND=0x10000000000000000000000L
 ro.vendor.nothing.feature.diff.product.TetrisTUR=0x20000000000000000000000000L
 
-# --- 其他原廠 vendor 屬性（顯示曲線／感測器／Glyph 等 ✓）---
+# Other stock vendor properties (display curves, sensors, Glyph, ...)
 avf.remote_attestation.enabled=false
 debug.egl.hw=0
 debug.mdpcomp.logs=0
@@ -389,8 +389,4 @@ ro.virtual_ab.io_uring.enabled=true
 ro.virtual_ab.userspace.snapshots.enabled=true
 vendor.pasr.activemode.enabled=false
 vendor.power.pasr.enabled=false
-# === 移植區塊結束 ===
-
-# 2026-10-05 C276：原廠顯示／Glyph／zram／音訊校正參數 ✓
-# 來源＝原廠 OTA（STOCK_PROPS_MISSING.json ✓）
-# 排除有風險的 ✗（control_privapp_permissions／virtual_ab／boot_security_patch 等 ✓）
+# End of the ported block.
