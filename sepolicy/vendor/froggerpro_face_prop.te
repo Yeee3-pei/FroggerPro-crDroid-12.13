@@ -1,8 +1,8 @@
-# 2026-10-06：face HAL 屬性歸屬（解 persist.vendor.face.type 的 avc denied set ✗）
-# 宣告【必須在最前面】✓（.te 由上而下處理 ✗）
-# 屬性組合比照同類（CIL 內的 vendor_*_prop 皆為
-#   property_type ＋ vendor_property_type ＋ vendor_restricted_property_type ✓）
+# Face HAL property label; resolves the avc denied set on persist.vendor.face.type.
+# The type declaration must come first; .te files are processed top to bottom.
+# Attribute set matches other CIL vendor_*_prop types:
+#   property_type, vendor_property_type, vendor_restricted_property_type.
 type vendor_face_config_prop, property_type, vendor_property_type, vendor_restricted_property_type;
 
-# face 服務域是 hal_face_default（見 file_contexts ✓）
+# The face service domain is hal_face_default (see file_contexts).
 set_prop(hal_face_default, vendor_face_config_prop)

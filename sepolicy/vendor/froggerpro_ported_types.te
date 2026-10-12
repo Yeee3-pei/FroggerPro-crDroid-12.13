@@ -1,7 +1,7 @@
-# 2026-10-05 C274c：原廠移植檔案的 exec type ✓
-# 屬性照原廠 CIL：file_type, exec_type, vendor_file_type ✓
-# ★ 只宣告【prebuilt vendor_sepolicy.cil 裡沒有】的 ✓
-#   （重複宣告 ⇒ Duplicate declaration ✗；完全不宣告 ⇒ type is not defined ✗）
+# Exec types for stock-ported binaries.
+# Attributes follow stock CIL: file_type, exec_type, vendor_file_type.
+# Declare only types absent from the prebuilt vendor_sepolicy.cil.
+#   A duplicate declaration fails; omitting one leaves the type undefined.
 
 type diagzn_exec, file_type, exec_type, vendor_file_type;
 type facsvc_exec, file_type, exec_type, vendor_file_type;

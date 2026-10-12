@@ -1,220 +1,33 @@
-# froggerpro_avc_fixes.te —— 實機 avc denial 的修正（逐條都有 logcat 原文為證 ✓）
-#
-# 來源：2026-10-04 V-a 版（_b）上實測的 logcat ✓
-# 原則：只用【已存在於政策中】的型別 ✓ 不用新名字 ✗
-#       每一條都附原始 denial 出處 ✓ 可回溯 ✓
-#
-# ── 1) xtra-daemon（vendor_location）每秒被拒讀 vndbinder ──────────────
-#   avc: denied { read } for name="vndbinder" dev="binder" ino=6
-#     scontext=u:r:vendor_location:s0
-#     tcontext=u:object_r:vndbinder_device:s0 tclass=chr_file permissive=0
-#   影響：log 每秒被洗一次（3000 行內出現數百次 ✗）＋ 定位服務功能受限 ✗
+# froggerpro_avc_fixes.te - allow rules for AVC denials observed on this device.
+# Existing types only, one rule per problem. Some denials are intentionally left unfixed
+# because allowing them hits a neverallow.
+
+# vendor_location denied read on vndbinder.
 allow vendor_location vndbinder_device:chr_file { read open getattr };
 
-# ── 2) Nothing 充電 HAL（hal_nt_charger）被拒讀 /proc/usb_real_type ────
-#   avc: denied { read } for name="usb_real_type" dev="proc" ino=4026534730
-#     scontext=u:r:hal_nt_charger:s0
-#     tcontext=u:object_r:proc:s0 tclass=file permissive=0
-#   影響：充電 HAL 讀不到 USB 線材型別 ⇒ 充電判斷／顯示可能不正確 ✗
-#   註：proc 是泛用型別 ⇒ 這條是廣域讀取允許 ✓（與平台既有寫法一致 ✓）
+# Nothing charging HAL denied read on /proc/usb_real_type (generic proc type, so a broad read).
 allow hal_nt_charger proc:file { read open getattr };
 
-
-# ============================================================================
-# 追加到 device/nothing/froggerPro/sepolicy/vendor/froggerpro_avc_fixes.te
-# （★等 rom-privacy-inc2 建置結束後才 append ✗ 建置中不改樹 ✗★）
-#
-# 來源：2026-10-08 01:5x privacy 版／slot _b 的 dmesg 實測 ✓
-# 原則：沿用該檔既有慣例 —— 只用已存在型別 ✓ 每條附 avc 原文 ✓ 一條一問題 ✓
-# ============================================================================
-
-# ── 3) vendor_location 的自我 netlink 通訊被拒 ──────────────────────────────
-#   avc: denied { create } for comm="loc-mq-thread"
-#     scontext=u:r:vendor_location:s0 tcontext=u:r:vendor_location:s0
-#     tclass=netlink_route_socket permissive=0
-#   影響：定位服務的 MQ 執行緒無法建立 route socket ⇒ 位置資訊取得受限 ✗
-#   ★這是比先前懷疑的 vndbinder 更可能的定位問題真因 ✓★
-#   （先前 #1 的 vndbinder 允許仍在 ✓ 兩者不衝突 ✓）
+# vendor_location denied creating a netlink route socket.
 allow vendor_location self:netlink_route_socket { create bind read write getattr };
 
-# ── 4) 觸控指紋 HAL 讀未分類屬性被拒 ────────────────────────────────────────
-#   avc: denied { read } for name="u:object_r:default_prop:s0" dev="tmpfs"
-#     scontext=u:r:hal_fingerprint_default:s0 tcontext=u:object_r:default_prop:s0 tclass=file
-#   影響：指紋 HAL 每次啟動／重試都新增一條 AVC ✗（FOD 初始化可能受影響 ✓）
-#   註：default_prop 是【未分類屬性】的落點 ⇒ 此允許屬廣域讀取 ✓
-#       與本檔 #2（hal_nt_charger 讀 proc）採同一尺度 ✓（唯讀 ✓ 不含 write ✗）
-# ★※本條【已實驗證明不可行】※★（2026-10-08 02:07 實測 ✗）
-#   原本寫法：allow hal_fingerprint_default default_prop:file { read open getattr };
-#   ⇒ 建置被 neverallow 擋死 ✗：
-#        neverallow on line 164 of system/sepolicy/private/property.te
-#        neverallow on line 272 of system/sepolicy/public/property.te
-#        libsepol.check_assertions: 2 neverallow failures occurred
-#        證據鏈：vendor_sepolicy.cil:29223 ← froggerpro_avc_fixes.te:46 ⇒ checkpolicy FAILED
-#   ⇒ ★neverallow 明文禁止 HAL 讀【泛用 default_prop】✗ 這是刻意的安全設計 ✓ 不可繞 ✗★
-#
-#   真因（已查明 ✓）：指紋 HAL 讀的是【未分類的】ro.system_dlkm.build.* 屬性
-#     實測 default_prop 區內容：ro.system_dlkm.build.fingerprint／date／date.utc／id／
-#       tags／type／version.incremental／version.release／version.sdk …
-#     實機原 AVC：
-#       avc: denied { read } for name="u:object_r:default_prop:s0" dev="tmpfs" ino=185
-#         scontext=u:r:hal_fingerprint_default:s0 tcontext=u:object_r:default_prop:s0 tclass=file
-#
-#   影響評估：★良性 ✗★ —— 被拒的只是【建置資訊的讀取】✗
-#     實測指紋 HAL 正常 running ✓（init.svc.vendor.fingerprint-nothing = running ✓ pid 2128 ✓）
-#     FOD 功能未見異常 ✓
-#   ⇒ 決策：★不修 ✗★（放寬泛型 default_prop = 廢掉 SELinux 對未分類屬性的保護 ✗ 得不償失 ✓）
-#     若日後真要修 ✓ 正確做法是在【property_contexts】給 ro.system_dlkm. 專屬標籤 ✗
-#     並在該專屬型別上開讀取 ✓ —— 而不是 allow default_prop ✗
-
-# ── 5) ★vendor_init 載入我方 vendor.prop 時被拒 ⇒ 內容沒生效 ✗★ ─────────────
-#   出處（我方自己的檔案 ✓）：
-#     device/nothing/froggerPro/vendor.prop:52  persist.vendor.bt.a2dp_offload_cap
-#     device/nothing/froggerPro/vendor.prop:71  persist.vendor.data.qms.stx_disable
-#     device/nothing/froggerPro/vendor.prop:210 persist.vendor.ssr.restart_level
-#     device/nothing/froggerPro/init/init.qcom.rc:500  on property:persist.vendor.ssr.restart_level=*
-#   實機原文：
-#     avc: denied { set } for property=persist.vendor.bt.a2dp_offload_cap
-#       scontext=u:r:vendor_init:s0 tcontext=u:object_r:vendor_bluetooth_prop:s0
-#     （同型另有 vendor_qms_prop／vendor_ssr_prop／config_prop／
-#       logpersistd_logging_prop／build_prop，見下方「刻意不修」）
-#   影響：★SSR 重啟策略（ALL_ENABLE）／QMS 節流／BT A2DP 編碼能力★
-#         目前全部【沒有真的設進去】✗ ⇒ 行為與原廠不同 ✗
-#   型別依據：device/qcom/sepolicy_vndr/legacy-um/qva/vendor/common/property_contexts:35
-#             persist.vendor.bt.a2dp_offload_cap → u:object_r:vendor_bluetooth_prop:s0
-#   ⚠️ 注意：是 vendor_bluetooth_prop ✗ 不是 bluetooth_prop ✗（後者是 plat 型別 ✓）
+# vendor_init denied setting its own vendor.* properties, so those values never applied.
 set_prop(vendor_init, vendor_bluetooth_prop)
 set_prop(vendor_init, vendor_qms_prop)
 set_prop(vendor_init, vendor_ssr_prop)
 
-# ── ★刻意【不修】的拒絕（都是【正確】的拒絕 ✗ 動了會降安全 ✗）──────────────
-#   6) avc: denied { set } property=ro.adb.secure  scontext=vendor_init
-#      ⇒ ★vendor 不該能改 adb 安全屬性 ✗ 這個拒絕是對的 ✓★（絕不解 ✗）
-#   7) avc: denied { set } property=persist.logd.logpersistd scontext=vendor_init
-#      ⇒ log 持久化屬 plat 屬性 ✓ 由 system_app／shell 管 ✓ vendor 不該設 ✗
-#        （App 只需【讀】✓ 已於 sepolicy/private/froggerpro_privacy.te 處理 ✓）
-#   8) avc: denied { set } property=ro.config.ringtone_sim2 → config_prop
-#      ⇒ plat 設定屬性 ✓ 由 plat 端設 ✓ vendor 不該寫 ✗
-#   9) avc: denied { read } property=system.face.DumpPath scontext=vendor_init
-#      ⇒ 屬 face 專用屬性 ✓ 已有 froggerpro_face_prop.te ✓ 若真需要另行處理 ✗
-#  10) system_server 讀 /sys/kernel/irq/*/name（★幾百個 IRQ 名 ✗★）
-#      ⇒ ★良性噪音 ✗ 讀 IRQ 名字不影響功能 ✓
-#        ★絕不可為此放寬 sysfs 泛型 ✗（那等於廢掉 SELinux 的 sysfs 保護 ✗）★
-#  11) permissioncontroller_app 探測 vendor.qti.qspmhal 服務 ＋ search system_data_file
-#      ⇒ 認證控制器列舉服務時的可容忍失敗 ✓ 屬噪音 ✗
-
-
-# ── 6) vendor_location 的 socket 建立被拒（2026-10-08 02:3x 刷後實測 ✗）──────────
-#   ★重要 ✗：先前（#3）只修了 netlink_route_socket ✗ ⇒ 刷後下一層浮出來 ✗
-#     ⇒ 這條才是完整的需要 ✓（數量變多不是變糟 ✓ 是修好一層 ⇒ 下一層現形 ✓）
-#   實機原文（逐字，多條）：
-#     avc: denied { create } for comm="loc-mq-thread"
-#       scontext=u:r:vendor_location:s0 tcontext=u:r:vendor_location:s0 tclass=netlink_generic_socket
-#     avc: denied { create } for comm="lowi-server"
-#       scontext=u:r:vendor_location:s0 tcontext=u:r:vendor_location:s0 tclass=qipcrtr_socket
-#     avc: denied { create } for comm="loc-mq-thread"
-#       scontext=u:r:vendor_location:s0 tcontext=u:r:vendor_location:s0 tclass=udp_socket
-#   影響：定位服務（loc-mq-thread／lowi-server）無法建立所需 socket ⇒ 位置功能受限 ✗
-#     ★qipcrtr_socket = 對 modem 的 QMI 通道 ✗★（GNSS 資料回傳路徑 ✓）
-#   背景：政策內已有 (type vendor_location_socket) ✓ 但只有
-#         (allow vendor_hal_gnss_qti vendor_location_socket …) ✓ ⇒ ★自己不能用自己的 socket ✗★
+# vendor_location denied creating the sockets used by loc-mq-thread and lowi-server.
 allow vendor_location self:{ netlink_generic_socket netlink_route_socket udp_socket qipcrtr_socket } { create bind read write getattr };
 
-# ── 7) bt.a2dp_offload_cap 的真正標籤是 bluetooth_prop（★不是 vendor_ ✗★）──────────
-#   實機原文：
-#     avc: denied { set } for property=persist.vendor.bt.a2dp_offload_cap
-#       scontext=u:r:vendor_init:s0 tcontext=u:object_r:★bluetooth_prop★:s0
-#   為何是 plat 型別（已查明 ✓）：編譯後
-#     system_ext/etc/selinux/system_ext_property_contexts:74
-#       persist.vendor.bt.a2dp        u:object_r:bluetooth_prop:s0
-#     ⇒ 較廣的前綴命中 ⇒ 蓋過 vendor_property_contexts 的
-#       persist.vendor.bluetooth.a2dp.  u:object_r:vendor_bluetooth_prop:s0 ✓
-#   ⚠️ 本條可能被 neverallow 擋 ✗（plat 型別給 vendor 域寫 ✗）
-#      ⇒ 若建置失敗 ⇒ 依 C337 的紀律：改回註解 ＋ 保留證據 ✗ 不繞路 ✗
-# ★※本條【已實驗證明不可行】※★（2026-10-08 02:42 實測 ✗）
-#   原本寫法：set_prop(vendor_init, bluetooth_prop)
-#   ⇒ 建置被 neverallow 擋死 ✗（rom-privacy-inc5 rc=1）
-#        neverallow check failed at plat_sepolicy.cil:54440 from system/sepolicy/private/property.te:291
-#          (neverallow base_typeattr_912 bluetooth_prop (file (ioctl read write create …)))
-#        neverallow check failed at plat_sepolicy.cil:54395 from system/sepolicy/private/property.te:291
-#          (neverallow base_typeattr_912 bluetooth_prop (property_service (set)))
-#        兩條的 allow at vendor_sepolicy.cil:29247/29250 ← froggerpro_avc_fixes.te（本檔 ✗）
-#   ⇒ ★neverallow 明文禁止 vendor 域寫 plat 型別 bluetooth_prop ✗ 不可繞 ✗★
-#
-#   ★★ 進階教訓（值得記 ✗）★★：
-#     一個 `set_prop(DOMAIN, TYPE)` 巨集會展開成【兩條】規則
-#       （一條 file 權限 ＋ 一條 property_service set ✓）
-#     ⇒ 所以【一條】set_prop 就會產生【2 個 neverallow 失敗】✗
-#       看到「2 neverallow failures」不代表有兩條規則寫錯 ✓ 要讀 allow at … 的來源行 ✓
-#
-#   現況（尚未解決 ✗ 留待日後 ✓）：
-#     persist.vendor.bt.a2dp_offload_cap 的執行期標籤是 ★bluetooth_prop★（plat ✗）
-#       依據：編譯後 system_ext/etc/selinux/system_ext_property_contexts:74
-#             persist.vendor.bt.a2dp        u:object_r:bluetooth_prop:s0
-#       （較廣的前綴命中 ⇒ 蓋過 vendor_property_contexts 的
-#          persist.vendor.bluetooth.a2dp. → vendor_bluetooth_prop ✓）
-#     影響：我方 vendor.prop:52 的 A2DP 編碼能力清單【沒被套用】✗
-#           ⇒ BT 音訊編碼協商可能只用預設集合 ✗（功能差異 ✗ 非崩壞 ✓）
-#     日後正確做法（✗ 不是放寬 allow ✗）：
-#       ① 在【我方】vendor property_contexts 用更精確的前綴蓋掉那個廣域命中 ✓
-#          （注意：兩個分割區的同名前綴會衝突 ✗ 需確認優先序 ✓）
-#       ② 或改由【plat 端】設定該屬性 ✓（例如放進 system.prop／由 system_app 設 ✓）
-#       ★不可做✗：allow vendor_init bluetooth_prop ✗（neverallow 明文禁止 ✓）
-
-
-# ── 8) ★★根因修正：vendor_location 的【網域轉換】✗★★（2026-10-08 08:1x 查證 ✓）
-#
-# 症狀（實機 ✗）：
-#   vendor_location 的 denied 由 2 → 13 → ★57 ✗★ 一路變多（每 5 秒一條循環 ✗）
-#   實機逐字：avc: denied { setopt } for comm="loc-mq-thread"
-#     scontext=u:r:vendor_location:s0 tcontext=u:r:vendor_location:s0
-#     tclass=netlink_generic_socket permissive=0
-#   ＋ avc: denied { ioctl } … path="socket:[35008]" tclass=udp_socket ioctlcmd=0x8927
-#
-# 查證（全部有實機／政策原文 ✓）：
-#   ① /vendor/bin/lowi-server 的標籤【是對的】✓ u:object_r:vendor_location_lowi_server_exec:s0
-#   ② 它在 /vendor/etc/init/ 裡【沒有自己的 rc】✗
-#      ⇒ 它是由【父行程】exec 起來的（父＝loc_launcher ✓ 標籤 vendor_location_exec ✓
-#         ⇒ 對應網域 vendor_location ✓）
-#   ③ 編譯後政策內【已存在】子網域的完整權限 ✓（cil 逐字 ✗）：
-#        (allow vendor_location_lowi_server self (netlink_generic_socket
-#               (read write create getattr setattr lock append map bind connect
-#                ★getopt setopt shutdown★)))
-#        (allow vendor_location_lowi_server self (udp_socket (ioctl … ★setopt★ …)))
-#        (allowx vendor_location_lowi_server self (ioctl udp_socket (★0x8927★ …)))
-#      ⇒ ★它們要的權限，子網域【全都已經有】✗★
-#   ④ ⇒ 缺的只有【父域 → 子域】的 exec 轉換 ✗
-#      SELinux 不會自動轉換 ✓ ⇒ 子行程停在父域 vendor_location ✗
-#      ⇒ ★拿不到子域那整套已寫好的權限 ✗★ ⇒ 功能受限 ＋ 每 5 秒噴 AVC ✗
-#
-# 修法（★root fix ✓ 而不是繼續放寬父域 ✗★）：
-#   domain_auto_trans(舊域, 執行檔型別, 新域) 巨集 ＝
-#     allow 舊域 執行檔:file { read open getattr execute } ＋
-#     type_transition 舊域 執行檔:process 新域 ＋
-#     allow 舊域 新域:process transition ✓
-#   ⇒ 一個巨集就把「轉換」所需的三件事一次寫齊 ✓（AOSP 標準寫法 ✓）
+# vendor_location must transition into its lowi-server subdomain. Without the transition the
+# child stays in vendor_location and never gets the socket permissions that subdomain has.
 domain_auto_trans(vendor_location, vendor_location_lowi_server_exec, vendor_location_lowi_server)
 
-# ── 9) ★臉部解鎖（C340 刷後唯一可能真的影響功能的一條 ✗）★
-#
-# 9a) create dir（★核心 ✗★）
-#   實機逐字：avc: denied { create } for comm="android.hardwar" name="sdk"
-#             scontext=u:r:hal_face_default:s0 tcontext=u:object_r:face_vendor_data_file:s0
-#   政策原文 ✓：
-#     system/sepolicy/private/hal_face.te:15
-#       allow {hal_face -coredomain} face_vendor_data_file:dir rw_dir_perms;
-#     ⇒ rw_dir_perms ＝ { open read write search add_name remove_name reparent } ✗
-#       ★不含 create ✗★ ⇒ 實機的 deny { create } 完全對上 ✓
-#   為何需要：Nothing 的臉部 HAL 要在 facedata 下建 sdk 子目錄 ✓
-#   ⇒ 只補【缺的那一個】perm ✓（✗ 不整包放寬 ✗）
-#   ⚠️ 註 ✗：AOSP 原意是 vold_prepare_subdirs 先備好該目錄 ✓
-#     若下一輪發現目錄其實已存在、create 不再出現 ⇒ 應回頭評估收回這條 ✓
+# Nothing face HAL denied create on facedata/sdk; AOSP grants that directory rw_dir_perms only.
 allow hal_face_default face_vendor_data_file:dir create;
 
-# 9b) 除錯 log tag（★低風險 ✗★）
-#   實機：denied { set } for property=log.tag.NT_FaceUnlock
-#   標籤 ✓：plat_property_contexts 內 `log.tag` 前綴 ⇒ u:object_r:log_tag_prop:s0 ✓
+# Face HAL debug property.
 set_prop(hal_face_default, log_tag_prop)
 
-# 註：本檔前段（#6）那組 allow vendor_location self:{…} 是【轉換修好之前】的暫時補丁 ✓
-#     轉換生效後它們多半變成多餘 ✗ ⇒ 先保留一輪觀察 ✓
-#     下一輪若 denied 歸零 ⇒ 應【移除】它們以維持最小權限 ✓
+# Not applied: hal_fingerprint_default default_prop and vendor_init bluetooth_prop are both
+# rejected by neverallow at build time.
