@@ -395,16 +395,18 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.se.omapi.uicc.xml:$(TARGET_COPY_OUT_ODM)/etc/permissions/sku_JPN/android.hardware.se.omapi.uicc.xml
 
 # Security
-# Each value states when that partition's contents were last updated. The vendor partition
-# carries Nothing's blobs from the B4.1-260907-1153 stock release, so it keeps that release's
-# date; only a new stock release can move it forward.
+# Each value states when that partition's contents were last updated. The stock release
+# B4.1-260907-1153 carries 2026-04-05 for vendor, but these values must not go backwards: the
+# value is written into the vendor image's AVB footer as com.android.build.vendor.security_patch
+# and the bootloader refuses a vendor image older than what the device already has, in which case
+# it drops to the recovery instead of booting. 2026-05-01 is the value this device has run.
+# Moving the vendor value forward is possible; moving it back requires a data reset first.
 BOOT_SECURITY_PATCH := 2026-09-01
 INIT_BOOT_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 ODM_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 SYSTEM_DLKM_SECURITY_PATCH := $(BOOT_SECURITY_PATCH)
-# VENDOR_DLKM_SECURITY_PATCH is deliberately left unset: the stock vendor_dlkm carries no
-# security_patch prop, and no prop is written unless this variable has a value.
-VENDOR_SECURITY_PATCH := 2026-04-05
+VENDOR_DLKM_SECURITY_PATCH := 2026-03-05
+VENDOR_SECURITY_PATCH := 2026-05-01
 
 # Sensors
 PRODUCT_COPY_FILES += \
@@ -547,7 +549,6 @@ PRODUCT_PACKAGES += \
 # Upstream now installs that content itself; if a later link step turns out to need vendor libs again, add the
 # specific modules back rather than the whole list.
 PRODUCT_PROPERTY_OVERRIDES += \
-    persist.sys.usb.config=adb,mtp \
     ro.adb.secure=0 \
     persist.logd.logpersistd=logcatd
 

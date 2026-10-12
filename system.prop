@@ -7,7 +7,10 @@
 # USB debugging is off by default on a freshly wiped device, which makes the shell and logcat unreachable
 # exactly when a boot loop needs to be diagnosed. Keeping a persistent logd buffer means the log of a boot
 # that never finishes can still be pulled afterwards.
-persist.sys.usb.config=adb,mtp
+#
+# No persist.sys.usb.config here: the framework writes that property itself ("adb" or empty), and a
+# non-standard value made usbd request MTP-only while the framework requested ADB, so the device
+# re-enumerated between the two until the framework overwrote the property.
 persist.logd.logpersistd=logcatd
 
 # Dalvik/ART heap sizes.
