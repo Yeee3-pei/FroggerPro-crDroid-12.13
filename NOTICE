@@ -7,9 +7,10 @@ This device tree is a fork of:
 
     AmphibianArcade/android_device_nothing_FroggerPro   (branch: lineage-23.2)
 
-The upstream commit history is retained in full (131 commits by its authors) and
-upstream is merged into this branch regularly. The large majority of the files in
-this tree are upstream work; this fork's contribution is a delta on top of it.
+It is based on upstream commit 8dfae7e. The upstream commit history is retained in
+full and upstream is merged into this branch regularly. The large majority of the
+files in this tree are upstream work; this fork's contribution is a delta on top of
+it.
 
 Local changes
 -------------
@@ -18,6 +19,9 @@ on-device evidence that verifies it. The written record of every source/config
 change — file, before/after, reason, how it was verified — lives in the project
 CHANGELOG outside this repository.
 
+Parts of the local delta were written with AI assistance and reviewed and verified
+on device by the maintainer.
+
 Attribution correction
 ----------------------
 Commit fd54aa3 (2026-10-07, "Revert FroggerPro: sepolicy: label the
@@ -25,6 +29,17 @@ leds/battery/vibrator sysfs path family (contexts batch 1/25)") is a local
 action by this fork's maintainer. It was committed under an incorrect author
 identity (AmphibianArcade) and is not an action by the upstream project.
 See also the local revert of the batch it reverts.
+
+Third-party components
+----------------------
+The image this tree builds contains binary components taken from the stock
+Nothing OS release (vendor, odm and system_ext content) and from AOSP and
+LineageOS. They stay under their owners' terms and are not relicensed by this
+repository. One example worth naming: the face unlock HAL reads
+/vendor/etc/license.lic, the stock SenseTime FaceAuth licence file, copied
+unchanged from the stock vendor image and required for the HAL to initialise.
+That file lives in the local vendor blob directory, which is not part of this
+repository.
 
 Maintained by
 -------------
