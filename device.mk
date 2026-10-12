@@ -402,7 +402,8 @@ BOOT_SECURITY_PATCH := 2026-09-01
 INIT_BOOT_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 ODM_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 SYSTEM_DLKM_SECURITY_PATCH := $(BOOT_SECURITY_PATCH)
-VENDOR_DLKM_SECURITY_PATCH := 2026-03-05
+# VENDOR_DLKM_SECURITY_PATCH is deliberately left unset: the stock vendor_dlkm carries no
+# security_patch prop, and no prop is written unless this variable has a value.
 VENDOR_SECURITY_PATCH := 2026-04-05
 
 # Sensors
