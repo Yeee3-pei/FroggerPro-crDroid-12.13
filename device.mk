@@ -549,7 +549,6 @@ PRODUCT_PACKAGES += \
 # Upstream now installs that content itself; if a later link step turns out to need vendor libs again, add the
 # specific modules back rather than the whole list.
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.adb.secure=0 \
     persist.logd.logpersistd=logcatd
 
 # Nothing Ndot fonts, installed by fonts.mk.
