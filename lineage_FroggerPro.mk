@@ -33,13 +33,5 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
     SystemDevice=FroggerPro \
     SystemName=FroggerPro
 
-# 自製 App（C176 ✓）
-PRODUCT_PACKAGES += FroggerProLauncher
-
-# 自製 App（C176 ✓）
-PRODUCT_PACKAGES += FroggerProEssential
-
-# C305（2026-10-06 發布）：依使用者決定（選項 2）【不把隱私 App 放進公開發布版】✓
-#   ⇒ 公開版＝純 LineageOS 體驗 ✓；隱私 App 只保留在 lineage_FroggerPro_privacy ✓
-#   （原為 2026-10-06 暫時收進主產品以方便實機驗證 ⇒ 驗證目的已達成 ⇒ 移除 ✓）
-# PRODUCT_PACKAGES += FroggerProPrivacy   ← 已停用 ✗
+# The privacy app belongs to the privacy variant only (lineage_FroggerPro_privacy.mk), so this
+# product stays a plain LineageOS build.
