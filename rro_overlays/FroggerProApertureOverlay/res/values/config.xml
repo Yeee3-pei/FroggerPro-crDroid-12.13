@@ -4,12 +4,16 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <resources>
-    <!-- 2026-10-06：開啟輔助鏡頭 ⇒ camera 2/3/4 會出現在鏡頭選擇裡。
-         硬證據：media_profiles_kera_v1.xml 的 cameraId 2/3/4 有 `2160p frameRate=60`
-         （camera 0/1 全區段都 ≤30fps ✗）⇒ 它們的 4K@60 走【一般錄影路徑即可成功】✓
-         ⇒ 不需要寫 high-speed session ✓（本 fork 也沒有那套基礎設施 ✗）。
-         代價（AOSP 註解明載）：那一側的「邏輯鏡頭切換」會被忽略 ⇒
-         改用明確的鏡頭選擇 ✓（就是新增的 2/3/4 選項 ✓）。 -->
+    <!-- Enabling the auxiliary cameras lists camera 2/3/4 in the lens selector.
+
+         media_profiles_kera_v1.xml declares 2160p frameRate=60 for cameraId 2/3/4 only;
+         cameraId 0 and 1 have no 60 fps entry in any section. Those entries are what make
+         Aperture offer a 60 fps option at all, since it derives the frame rates it offers
+         from the media profiles.
+
+         Cost, as the AOSP documentation for this flag states: logical lens switching on
+         that side is ignored, so the lens is selected explicitly instead, which is what
+         the added 2/3/4 entries are for. -->
     <bool name="config_enableAuxCameras">true</bool>
     <!-- An array of triplets made of (camera ID, approximate zoom ratio, exact zoom ratio).
          These values will be added to the lens selector if one or more cameras uses the
@@ -63,16 +67,23 @@
                  <item>1</item> <item>sd|hd|fhd</item> <item>60</item>
              </string-array>
     -->
-    <!-- 2026-10-06：★移除 C171 那條「camera 0 支援 hd|fhd@60」的宣告★
-         原本這裡寫：
+    <!-- An entry that declared "camera 0 supports hd|fhd@60" was removed. It read:
+
              <item>0</item> <item>hd|fhd</item> <item>60</item>
-         它的註解聲稱「camera 0 的 HAL 有 high-speed 1920x1080@30-120，所以 1080p60 可行」，
-         但本輪用硬證據推翻 ✗：
-           media_profiles_kera_v1.xml 的 cameraId 0 區段（第 102-634 行）【全部 ≤30fps】✗
-           ⇒ 編碼器沒有 60fps profile ⇒ UI 給 60fps 只會產生 0 秒空檔（ERROR_NO_VALID_DATA）✗
-           ⇒ 這正是使用者回報的「60fps 會卡」的真正來源 ✗（C171 從沒真的修好 ✓）
-         真正的 60fps 改由 camera 2/3/4 提供 ✓（它們的 media profile 有 2160p@60 ✓
-         且已由上面的 config_enableAuxCameras 開啟 ✓）。
-         ⇒ 本陣列保持【空的】✓；Aperture 另外有關鍵的安全網（只提供編碼器編得出來的 fps ✓）。 -->
+
+         Its comment claimed camera 0's HAL offers high-speed 1920x1080@30-120, making
+         1080p60 possible. That was not reproduced: the cameraId 0 section of the vendor
+         media profile declares no 60 fps entry, and no recording made from this tree shows
+         a 1080p60 attempt. 1080p60 is therefore not advertised here.
+
+         This does not mean camera 0 cannot record at 60 fps. Measured on this device, the
+         logical back camera (cameraId 0) records 3840x2160 at about 60 fps on the ordinary
+         recording path with no physical sub-camera routing (CamX configure_streams reports
+         an empty physical_camera_id, the session runs on CameraId-0, and camera requests
+         carry aeTargetFpsRange=[60,60]); the encoder profile resolved for it is the cameraId
+         0 2160p entry, which itself declares frameRate 30. A stream's actual rate comes from
+         the HAL vendor frame-rate tables, not from the profile's frameRate attribute. This
+         array therefore stays empty. -->
     <string-array name="config_additionalVideoConfigurations" />
 </resources>
+<!-- Read. -->

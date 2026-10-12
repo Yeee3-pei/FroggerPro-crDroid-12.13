@@ -33,13 +33,15 @@
 
     <!-- The radius of the enrollment progress bar, in DP. -->
     <integer name="config_udfpsEnrollProgressBar" translatable="false">94</integer>
-    <!-- 前面、螢幕下的指紋感應器（FOD）：
-         goodix blob 回報的 sensor props 不是 UDFPS ⇒ SettingWizard 掉到最後的
-         front/rear 分支並因為兩個 bool 都是 false 而畫【手機背面】✗
-         這裡開 front ⇒ 顯示 front overlay 插圖 + front 文案 ✓ -->
+    <!-- Under-display fingerprint sensor on the front of the device.
+         The goodix blob reports sensor properties that are not UDFPS, so SetupWizard falls
+         through to its front/rear branch and, with both booleans false, draws the back of
+         the phone. Enabling this shows the front overlay illustration and copy instead. -->
     <bool name="config_is_front_facing_fps">true</bool>
-    <!-- FOD 在螢幕下半部 ⇒ 把動畫圖示移到對應位置 ✓ -->
+    <!-- The sensor sits in the lower half of the screen, so the enrolling animation is
+         centred to match. -->
     <item name="fingerprint_sensor_location_fraction_x" type="fraction">50%</item>
     <item name="fingerprint_sensor_location_fraction_y" type="fraction">68%</item>
 
 </resources>
+<!-- Read. -->

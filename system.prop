@@ -33,8 +33,15 @@ dalvik.vm.heapmaxfree=8m
 # MediaProfiles builds the XML file name as "media_profiles" + the value of ro.media.xml_variant.profiles
 # (see frameworks/av/media/libmedia/MediaProfiles.cpp getXmlPaths(), which defaults the variant to "_V1_0").
 # It then searches product/etc, odm/etc, vendor/etc and finally system/etc for that name, falling back to
-# system/etc/media_profiles.xml. This device ships /vendor/etc/media_profiles.xml (no 60 fps entries) and
-# /vendor/etc/media_profiles_kera_v1.xml (12 entries at 4K/3840x2160 @ 60 fps, incl. timelapse), but neither
-# file matches the default "_V1_0" name, so MediaProfiles silently loads the AOSP fallback and 60 fps is not
-# offered. Selecting the vendor's own file by its actual suffix enables it.
+# system/etc/media_profiles.xml.
+# Camcorder: point ro.media.xml_variant.profiles at the vendor's own profile file (its suffix is
+# _kera_v1). The default "_V1_0" name matches no file on this device, so MediaProfiles would
+# otherwise fall back to the AOSP profiles and lose the vendor's per-camera entries.
+#
+# The profile declares 60 fps only for cameraId 2/3/4, and only at 2160p. That is not a limit on
+# what the back camera (cameraId 0) can record: measured on this device, the logical back camera
+# records 3840x2160 at about 60 fps on the ordinary recording path, and the encoder profile resolved
+# for it is the cameraId 0 2160p entry, which itself declares frameRate 30. The frame rate a stream
+# actually runs at comes from the HAL vendor frame-rate tables, not from the media profile's
+# frameRate attribute.
 ro.media.xml_variant.profiles=_kera_v1

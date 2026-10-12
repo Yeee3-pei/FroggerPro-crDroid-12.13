@@ -1,4 +1,4 @@
-# ── 本機備份／暫存（禁止進版控 ✗）──
+# Local backups and scratch files.
 *.bak
 *.bak.*
 *.bak_*
@@ -8,5 +8,5 @@
 *~
 nohup.out
 
-# ── 本機工具輸出 ──
+# Local tool output.
 *.log
