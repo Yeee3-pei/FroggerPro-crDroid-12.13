@@ -395,12 +395,15 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.se.omapi.uicc.xml:$(TARGET_COPY_OUT_ODM)/etc/permissions/sku_JPN/android.hardware.se.omapi.uicc.xml
 
 # Security
+# Each value states when that partition's contents were last updated. The vendor partition
+# carries Nothing's blobs from the B4.1-260907-1153 stock release, so it keeps that release's
+# date; only a new stock release can move it forward.
 BOOT_SECURITY_PATCH := 2026-09-01
 INIT_BOOT_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 ODM_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 SYSTEM_DLKM_SECURITY_PATCH := $(BOOT_SECURITY_PATCH)
 VENDOR_DLKM_SECURITY_PATCH := 2026-03-05
-VENDOR_SECURITY_PATCH := 2026-05-01
+VENDOR_SECURITY_PATCH := 2026-04-05
 
 # Sensors
 PRODUCT_COPY_FILES += \
