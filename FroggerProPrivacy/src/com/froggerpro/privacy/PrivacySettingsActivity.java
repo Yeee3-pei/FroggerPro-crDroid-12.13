@@ -5,8 +5,6 @@
 
 package com.froggerpro.privacy;
 
-import android.hardware.SensorPrivacyManager;
-import android.hardware.SensorPrivacyManager.Sensors;
 import android.os.Bundle;
 import android.os.SystemProperties;
 import android.preference.EditTextPreference;
@@ -25,41 +23,15 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * FroggerPro 隱私設定（A 類：純執行期開關 ＋ I 類：唯讀狀態）。
- *
- * 設計原則（見 ~/nphone/live/PRIVACY_FULL_CATALOG.md）：
- *   1. 只有【真實生效且可驗證】的項目才做成開關 ✓
- *   2. 每個開關寫明改了哪個系統設定、以及怎麼驗證（可重現的 adb 指令）✓
- *   3. 無法執行期切換的只顯示狀態與原因，不提供假開關 ✗
- *   4. 預設值皆為【最強隱私】；放寬與否由使用者決定 ✓
- *   5. 所有寫入皆包 try/catch，App 不因單一項失敗而崩潰 ✓
- *
- * A 類機制（每項都有 AOSP 原始碼依據 ✓）：
- *   - AGPS：Settings.Global.ASSISTED_GPS_ENABLED（0/1）
- *       GnssLocationProvider.java:1891-1903 推 persist.sys.xtra-daemon.enabled；
- *       :523 ContentObserver ⇒ 不需重開機。緊急電話強制開啟（:1893-1895）。
- *   - 廣告框架：DeviceConfig "adservices"/"adservice_enabled"
- *       SettingsProvider.java:2562-2579「有 WRITE_DEVICE_CONFIG 就不查命名空間 allowlist」。
- *   - USB adb：Settings.Global.ADB_ENABLED（AdbService.java:151-193 ContentObserver ✓）。
- *   - 定位模式：Settings.Secure.LOCATION_MODE（0=關 / 1=僅裝置 / 3=高精度）。
- *   - NFC：Settings.Global.NFC_ON（NfcService 讀取 ✓）。
- *   - Wi-Fi／藍牙永遠掃描：Settings.Global.WIFI_SCAN_ALWAYS_AVAILABLE /
- *       BLE_SCAN_ALWAYS_AVAILABLE（可被用於定位 ✗）。
- *   - 相機／麥克風／動態感測器總關：SensorPrivacyManager.setSensorPrivacy(Sensors.X, true)
- *       SensorPrivacyManager.java:795-801（@SystemApi ＋ MANAGE_SENSOR_PRIVACY ✓
- *       本 App platform 簽章且 privileged ⇒ 符合 ✓）
- *       ★注意★：狀態存在 XML（PersistedState.java ✓）非 Settings ✗
- *   - NTP 伺服器：Settings.Global.NTP_SERVER（Settings.java:15038 ✓
- *       由 NtpTrustedTime 消費 ✓；可能需重開機才生效 ⚠️）
- *   - 資料節省：Settings.Global.DATA_SAVER_MODE。
- *   - 自動時間／時區：Settings.Global.AUTO_TIME / AUTO_TIME_ZONE（NTP 洩漏面 ✓）。
+ * FroggerPro privacy settings: pure runtime switches (class A) plus read-only status rows.
+ * Each switch writes one real system setting; defaults target the strongest privacy.
  */
 public class PrivacySettingsActivity extends PreferenceActivity {
 
-    // ---- 等級 ----
+    // ---- Tier ----
     private static final String KEY_TIER = "tier";
 
-    // ---- 既有開關 ----
+    // ---- Existing switches ----
     private static final String KEY_CAPTIVE_OFF = "captive_portal_off";
     private static final String KEY_DNS_ON = "private_dns_on";
     private static final String KEY_DNS_HOST = "private_dns_host";
@@ -68,59 +40,43 @@ public class PrivacySettingsActivity extends PreferenceActivity {
     private static final String KEY_ADSERVICES_OFF = "adservices_off";
     private static final String KEY_LOGCATD_STATUS = "logcatd_status";
 
-    // ---- 本輪新增（A 類）----
-    private static final String KEY_LOCATION_DEVICE_ONLY = "location_device_only";
+    // ---- Class A switches ----
+    private static final String KEY_LOCATION_ON = "location_on";
+    private static final String KEY_LOCATION_ACCURACY = "location_accuracy";
     private static final String KEY_NFC_OFF = "nfc_off";
     private static final String KEY_WIFI_SCAN_OFF = "wifi_scan_off";
     private static final String KEY_BLE_SCAN_OFF = "ble_scan_off";
-    private static final String KEY_SENSOR_PRIVACY_ON = "sensor_privacy_on";
+    private static final String KEY_SENSOR_PRIVACY_OPEN = "sensor_privacy_open";
+    private static final String KEY_APP_LANGUAGE = "app_language";
     private static final String KEY_NTP_SERVER = "ntp_server";
     private static final String KEY_AUTO_TIME_OFF = "auto_time_off";
 
-    // ---- 2026-10-08 新增：無 SIM 自動飛航（★實測驅動 ✗★）----
-    //   由來 ✓：實機量到沒插 SIM 時（gsm.sim.state=ABSENT ✗）
-    //     dumpsys batterystats ⇒ 螢幕關閉/doze 段 316.5 mAh ✗ 其中 ★299 mAh 是 mobile_radio ✗★
-    //     ⇒ modem 持續全頻掃描／反覆註冊 ✗ ⇒ 待機 1.86 %/h ✗（使用者觀察 3 小時 5% ✓ 吻合 ✓）
-    //   機制實測 ✓（本機 adb 驗證 ✓）：只靠
-    //     Settings.Global.putInt(AIRPLANE_MODE_ON, 1)
-    //     系統就會生效 ✓（cmd connectivity airplane-mode：disabled → ★enabled★ ✓）
-    //     ⇒ 我方 App 用既有權限 WRITE_SECURE_SETTINGS ✓ 即可 ✓ 不需 SystemApi ✗
-    private static final String KEY_NOSIM_AIRPLANE = "nosim_airplane_off";
-    private SwitchPreference mNosimAirplane;
-
-    // ---- 系統設定鍵 ----
+    // ---- System setting keys ----
     private static final String DNS_MODE_GLOBAL = "private_dns_mode";
     private static final String DNS_SPECIFIER_GLOBAL = "private_dns_specifier";
 
-    /** 定位模式：0=關閉 / 1=僅裝置（不用網路定位 ✓）/ 3=高精度 */
+    /** Location mode: 0=off / 1=device only (no network location) / 3=high accuracy */
     private static final int LOCATION_MODE_OFF = 0;
     private static final int LOCATION_MODE_DEVICE_ONLY = 1;
+    private static final int LOCATION_MODE_HIGH_ACCURACY = 3;
 
-    /** DeviceConfig：廣告框架命名空間與 key（FlagsConstants / PhFlags 之鍵名 ✓） */
+    /** Local memory of the accuracy the user picked; the system setting stays the source of truth. */
+    private static final String PREFS_NAME = "privacy_prefs";
+    private static final String PREF_LOCATION_ACCURACY = "location_accuracy";
+
+    /** DeviceConfig: advertising framework namespace and key (key names from FlagsConstants / PhFlags) */
     private static final String AD_NAMESPACE = "adservices";
     private static final String AD_KEY = "adservice_enabled";
 
-    /** 持久 logcatd 屬性（唯讀顯示用） */
+    /** Persistent logcatd property (for read-only display) */
     private static final String PROP_LOGPERSISTD = "persist.logd.logpersistd";
-    // ★已移除 PROP_XTRA（persist.sys.xtra-daemon.enabled）★
-    //   原因：platform_app 網域無權讀該屬性（實機 avc: denied read xtra_control_prop ✗）
-    //   ⇒ 讀它只會顯示「讀不到」＋持續噴 AVC 噪音 ✗
-    //   ⇒ 連常數一起刪（沒用到的常數仍會被編進 dex ✗ 造成內容驗證誤判 ✓）
+    // persist.sys.xtra-daemon.enabled is not read: platform_app cannot read it (avc denied); only AVC noise.
 
     private static final String LOGPERSISTD_SEPOLICY_HINT =
             "set_prop(system_app, logpersistd_logging_prop)";
 
-    // ---- N 類：LineageOS 統計上報 ----
-    //   鍵名依據：lineage-sdk/sdk/src/java/lineageos/providers/LineageSettings.java:2741
-    //     public static final String STATS_COLLECTION = "stats_collection";
-    //   provider：content://lineagesettings/secure
-    //     寫入權限 lineageos.permission.WRITE_SETTINGS（signature|privileged ✓）
-    //     ⇒ 本 App 是 platform 簽章 ＋ privileged ⇒ 由簽章路徑授予 ✓
-    //     ⇒ ★不需放進 privapp 白名單 ✗（同 MANAGE_SENSOR_PRIVACY 的道理 ✓）
-    //   ★AOSP 的 Settings.Secure 【查不到】這個鍵 ✗★
-    //     已實測：settings get secure stats_collection ⇒ null ✓
-    //     （同 button_brightness 那一課：PMS 讀 LineageSettings，CLI 寫 AOSP Settings ✗）
-    //   ⇒ 必須直接走 content://lineagesettings/secure ✓
+    // ---- Class N: LineageOS stats reporting ----
+    // stats_collection is served by content://lineagesettings/secure, NOT AOSP Settings.Secure.
     private static final String KEY_STATS_OFF = "stats_off";
     private static final String LINEAGE_SECURE_URI = "content://lineagesettings/secure";
 
@@ -132,16 +88,15 @@ public class PrivacySettingsActivity extends PreferenceActivity {
     private EditTextPreference mDnsHost;
     private SwitchPreference mAdservicesOff;
     private Preference mLogcatdStatus;
-    private SwitchPreference mLocationDeviceOnly;
+    private SwitchPreference mLocationOn;
+    private ListPreference mLocationAccuracy;
     private SwitchPreference mNfcOff;
     private SwitchPreference mWifiScanOff;
     private SwitchPreference mBleScanOff;
-    private SwitchPreference mSensorPrivacyOn;
+    private Preference mSensorPrivacyOpen;
     private EditTextPreference mNtpServer;
     private SwitchPreference mAutoTimeOff;
     private SwitchPreference mStatsOff;
-
-    private SensorPrivacyManager mSensorPrivacy;
 
     @Override
     @SuppressWarnings("deprecation")
@@ -153,22 +108,18 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         mAgpsOff = (SwitchPreference) findPreference(KEY_AGPS_OFF);
         mAdbOff = (SwitchPreference) findPreference(KEY_ADB_OFF);
 
-        // ---- N 類：LineageOS 統計上報（stats_collection）----
-        // ★回傳 false 表示「不採用這次變更」✗ ⇒ 寫入失敗時 UI 不會假裝成功 ✓
+        // Returns false on write failure, so the UI does not pretend the change succeeded.
         mStatsOff = (SwitchPreference) findPreference(KEY_STATS_OFF);
         if (mStatsOff != null) {
             mStatsOff.setOnPreferenceChangeListener((p, v) -> {
                 boolean off = (Boolean) v;
-                // 寫入後立刻讀回驗證：只有真的寫進去才讓 UI 改變 ✓
+                // Read back immediately after writing: only change the UI if it really landed.
                 return setLineageSecureInt("stats_collection", off ? 0 : 1)
                         && getLineageSecureInt("stats_collection", 1) == (off ? 0 : 1);
             });
         }
 
-        // ---- B 類：一鍵開啟系統的隱私儀表板 ----
-        // 理由：平台的 Privacy Dashboard／權限管理 UI 比自造清單更完整且跟得上 AOSP 改版 ✓
-        //       本 App 只負責「把使用者送到正確的地方」✗ 不自造半套清單 ✗
-        // 用全限定名 android.content.Intent ⇒ 不必新增 import ✓ 減少出錯面 ✓
+        // Sends the user to the platform privacy dashboard instead of hand-rolling a per-app list.
         Preference dash = findPreference("privacy_dashboard");
         if (dash != null) {
             dash.setOnPreferenceClickListener(p -> {
@@ -182,12 +133,12 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                     try {
                         startActivity(new android.content.Intent(a)
                                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
-                        return true;   // 送出去就結束 ✓ 不猜對方一定開得起來 ✗
+                        return true;   // Sent is enough; do not assume it will definitely open.
                     } catch (Exception ignore) {
-                        // 這個 action 不存在 ⇒ 換下一個 ✓
+                        // This action does not exist, so try the next one.
                     }
                 }
-                Toast.makeText(this, "此裝置沒有可用的隱私儀表板畫面 ✗",
+                Toast.makeText(this, R.string.privacy_dashboard_unavailable,
                         Toast.LENGTH_LONG).show();
                 return true;
             });
@@ -197,21 +148,14 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         mDnsHost = (EditTextPreference) findPreference(KEY_DNS_HOST);
         mAdservicesOff = (SwitchPreference) findPreference(KEY_ADSERVICES_OFF);
         mLogcatdStatus = findPreference(KEY_LOGCATD_STATUS);
-        mLocationDeviceOnly = (SwitchPreference) findPreference(KEY_LOCATION_DEVICE_ONLY);
+        mLocationOn = (SwitchPreference) findPreference(KEY_LOCATION_ON);
+        mLocationAccuracy = (ListPreference) findPreference(KEY_LOCATION_ACCURACY);
         mNfcOff = (SwitchPreference) findPreference(KEY_NFC_OFF);
         mWifiScanOff = (SwitchPreference) findPreference(KEY_WIFI_SCAN_OFF);
         mBleScanOff = (SwitchPreference) findPreference(KEY_BLE_SCAN_OFF);
-        mSensorPrivacyOn = (SwitchPreference) findPreference(KEY_SENSOR_PRIVACY_ON);
+        mSensorPrivacyOpen = findPreference(KEY_SENSOR_PRIVACY_OPEN);
         mNtpServer = (EditTextPreference) findPreference(KEY_NTP_SERVER);
         mAutoTimeOff = (SwitchPreference) findPreference(KEY_AUTO_TIME_OFF);
-        mNosimAirplane = (SwitchPreference) findPreference(KEY_NOSIM_AIRPLANE);
-        wireNosimAirplane();
-
-        try {
-            mSensorPrivacy = getSystemService(SensorPrivacyManager.class);
-        } catch (Throwable t) {
-            mSensorPrivacy = null;
-        }
 
         if (mTier != null) {
             mTier.setOnPreferenceChangeListener((p, v) -> {
@@ -223,7 +167,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mAgpsOff != null) {
             mAgpsOff.setOnPreferenceChangeListener((p, v) -> {
                 if (!setAgpsDisabled((Boolean) v)) {
-                    toast("AGPS 設定寫入失敗（詳見摘要中的驗證指令）");
+                    toast(getString(R.string.agps_write_failed));
                 }
                 return true;
             });
@@ -232,7 +176,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mAdbOff != null) {
             mAdbOff.setOnPreferenceChangeListener((p, v) -> {
                 if (!setAdbDisabled((Boolean) v)) {
-                    toast("USB adb 設定寫入失敗（詳見摘要中的驗證指令）");
+                    toast(getString(R.string.adb_write_failed));
                 }
                 return true;
             });
@@ -262,17 +206,31 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mAdservicesOff != null) {
             mAdservicesOff.setOnPreferenceChangeListener((p, v) -> {
                 if (!setAdServicesDisabled((Boolean) v)) {
-                    toast("廣告框架設定失敗：無 WRITE_DEVICE_CONFIG 或 DeviceConfig 不可用");
+                    toast(getString(R.string.adservices_write_failed));
                     syncFromSystem();
                 }
                 return true;
             });
         }
 
-        if (mLocationDeviceOnly != null) {
-            mLocationDeviceOnly.setOnPreferenceChangeListener((p, v) -> {
-                if (!setLocationDeviceOnly((Boolean) v)) {
-                    toast("定位模式寫入失敗");
+        if (mLocationOn != null) {
+            mLocationOn.setOnPreferenceChangeListener((p, v) -> {
+                int mode = (Boolean) v ? readAccuracyPref() : LOCATION_MODE_OFF;
+                if (!setLocationMode(mode)) {
+                    toast(getString(R.string.location_mode_write_failed));
+                }
+                syncFromSystem();
+                return true;
+            });
+        }
+
+        if (mLocationAccuracy != null) {
+            mLocationAccuracy.setOnPreferenceChangeListener((p, v) -> {
+                int mode = Integer.parseInt(String.valueOf(v));
+                saveAccuracyPref(mode);
+                // Write immediately, but only while the location switch is on.
+                if (mLocationOn != null && mLocationOn.isChecked() && !setLocationMode(mode)) {
+                    toast(getString(R.string.location_accuracy_write_failed));
                 }
                 syncFromSystem();
                 return true;
@@ -282,7 +240,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mNfcOff != null) {
             mNfcOff.setOnPreferenceChangeListener((p, v) -> {
                 if (!setNfcDisabled((Boolean) v)) {
-                    toast("NFC 設定寫入失敗");
+                    toast(getString(R.string.nfc_write_failed));
                 }
                 syncFromSystem();
                 return true;
@@ -292,7 +250,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mWifiScanOff != null) {
             mWifiScanOff.setOnPreferenceChangeListener((p, v) -> {
                 if (!setGlobalInt("wifi_scan_always_enabled", !(Boolean) v ? 1 : 0)) {
-                    toast("Wi-Fi 掃描設定寫入失敗");
+                    toast(getString(R.string.wifi_scan_write_failed));
                 }
                 syncFromSystem();
                 return true;
@@ -302,21 +260,30 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mBleScanOff != null) {
             mBleScanOff.setOnPreferenceChangeListener((p, v) -> {
                 if (!setGlobalInt("ble_scan_always_enabled", !(Boolean) v ? 1 : 0)) {
-                    toast("藍牙掃描設定寫入失敗");
+                    toast(getString(R.string.ble_scan_write_failed));
                 }
                 syncFromSystem();
                 return true;
             });
         }
 
-        if (mSensorPrivacyOn != null) {
-            mSensorPrivacyOn.setOnPreferenceChangeListener((p, v) -> {
-                boolean want = (Boolean) v;
-                boolean ok = setSensorPrivacy(want);
-                if (!ok) {
-                    toast("相機／麥克風總關設定失敗：需 MANAGE_SENSOR_PRIVACY（platform 簽章）");
-                }
-                syncFromSystem();
+        // The platform owns the camera/microphone master switch; this app cannot hold
+        // MANAGE_SENSOR_PRIVACY (protectionLevel = internal|installer|role), so it only opens
+        // the system privacy screen instead of pretending to toggle it.
+        if (mSensorPrivacyOpen != null) {
+            mSensorPrivacyOpen.setOnPreferenceClickListener(p -> {
+                startActivity(new android.content.Intent(
+                        android.provider.Settings.ACTION_PRIVACY_SETTINGS));
+                return true;
+            });
+        }
+
+        Preference appLanguage = findPreference(KEY_APP_LANGUAGE);
+        if (appLanguage != null) {
+            // Per-app language: the platform page lists the locales declared in locales_config.xml.
+            appLanguage.setOnPreferenceClickListener(p -> {
+                startActivity(new android.content.Intent(Settings.ACTION_APP_LOCALE_SETTINGS,
+                        android.net.Uri.fromParts("package", getPackageName(), null)));
                 return true;
             });
         }
@@ -328,9 +295,9 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                     Settings.Global.putString(getContentResolver(),
                             Settings.Global.NTP_SERVER, host.isEmpty() ? null : host);
                 } catch (Exception e) {
-                    toast("NTP 伺服器：" + e.getClass().getSimpleName());
+                    toast(getString(R.string.ntp_server_error, e.getClass().getSimpleName()));
                 }
-                toast("NTP 伺服器已設定；可能需重開機才生效");
+                toast(getString(R.string.ntp_server_set));
                 syncFromSystem();
                 return true;
             });
@@ -342,69 +309,11 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                 boolean ok = setGlobalInt("auto_time", auto ? 1 : 0)
                         & setGlobalInt("auto_time_zone", auto ? 1 : 0);
                 if (!ok) {
-                    toast("自動時間／時區設定失敗");
+                    toast(getString(R.string.auto_time_write_failed));
                 }
                 syncFromSystem();
                 return true;
             });
-        }
-    }
-
-    // ★2026-10-08：無 SIM 自動飛航（feature 2 ✓ 實測驅動 ✗）
-    //   觸發時機：使用者切換本開關時 ✓（✓ 開機後不主動改 ✓ 避免使用者意外被斷網 ✗）
-    private void wireNosimAirplane() {
-        if (mNosimAirplane == null) {
-            return;
-        }
-        mNosimAirplane.setOnPreferenceChangeListener((p, v) -> {
-            boolean want = (Boolean) v;
-            if (want) {
-                if (isSimAbsent()) {
-                    setAirplaneMode(true);
-                } else {
-                    toast("有偵測到 SIM 卡 ⇒ 未開啟飛航（本開關只用於無卡情境）");
-                }
-            } else {
-                // 關閉本功能 ⇒ 一併解除飛航 ✓（否則使用者會找不到怎麼恢復網路 ✗）
-                setAirplaneMode(false);
-            }
-            syncFromSystem();
-            return true;
-        });
-    }
-
-    /** 兩張卡都沒 READY ⇒ 視為無 SIM ✓（用屬性讀取 ✓ 不需 READ_PHONE_STATE ✗） */
-    private boolean isSimAbsent() {
-        try {
-            String sim = SystemProperties.get("gsm.sim.state", "");
-            if (sim.isEmpty()) {
-                return true;
-            }
-            for (String s : sim.split(",")) {
-                if (s.trim().contains("READY")) {
-                    return false;
-                }
-            }
-            return true;
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    private boolean isAirplaneModeOn() {
-        return Settings.Global.getInt(getContentResolver(),
-                Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
-    }
-
-    /** ★實測確認可用 ✓：只 putInt、系統即生效 ✓（cmd connectivity airplane-mode ⇒ enabled ✓） */
-    private boolean setAirplaneMode(boolean on) {
-        try {
-            Settings.Global.putInt(getContentResolver(),
-                    Settings.Global.AIRPLANE_MODE_ON, on ? 1 : 0);
-            return true;
-        } catch (Exception e) {
-            toast("飛航模式：" + e.getClass().getSimpleName());
-            return false;
         }
     }
 
@@ -414,7 +323,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         syncFromSystem();
     }
 
-    /** 由系統實際值回填 UI（不靠 SharedPreferences ✗ 保證顯示的就是真實狀態 ✓） */
+    /** Back-fill the UI from the real system values (not from SharedPreferences, so what is shown is the true state). */
     @SuppressWarnings("deprecation")
     private void syncFromSystem() {
         int cpMode = Settings.Global.getInt(getContentResolver(),
@@ -426,36 +335,17 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                 Settings.Global.ASSISTED_GPS_ENABLED, 0);
         if (mAgpsOff != null) {
             mAgpsOff.setChecked(agps == 0);
-            // ★不讀 persist.sys.xtra-daemon.enabled ✗★
-            //    platform_app 網域無權讀該屬性（實機 avc: denied read xtra_control_prop ✗）
-            //    ⇒ 讀了只會顯示「讀不到」並每分鐘噴一條 AVC 噪音 ✗ ⇒ 只顯示 assisted_gps_enabled ✓
+            // Only assisted_gps_enabled is shown; persist.sys.xtra-daemon.enabled is unreadable (avc denied).
             mAgpsOff.setSummary(getString(R.string.agps_summary)
-                    + "\n目前 assisted_gps_enabled=" + agps
-                    + "（0 = 已停用網路輔助 ✓）");
-            }
-
-            // ★2026-10-08：無 SIM 自動飛航的狀態顯示（★只顯示實測得出的事實 ✗★）
-            if (mNosimAirplane != null) {
-            boolean noSim = isSimAbsent();
-            boolean apm = isAirplaneModeOn();
-            mNosimAirplane.setChecked(noSim && apm);
-            String simNow;
-            try {
-                simNow = SystemProperties.get("gsm.sim.state", "（讀不到）");
-            } catch (Throwable t) {
-                simNow = "（讀不到）";
-            }
-            mNosimAirplane.setSummary(getString(R.string.nosim_airplane_summary)
-                    + "\n目前 gsm.sim.state=" + simNow
-                    + "（無 READY 即視為無卡 ✓）"
-                    + "\n目前 airplane_mode_on=" + (apm ? 1 : 0));
-            }
+                    + "\nCurrent assisted_gps_enabled=" + agps
+                    + getString(R.string.agps_value_note));
+        }
 
         int adb = Settings.Global.getInt(getContentResolver(), Settings.Global.ADB_ENABLED, 0);
         if (mAdbOff != null) {
             mAdbOff.setChecked(adb == 0);
             mAdbOff.setSummary(getString(R.string.adb_summary)
-                    + "\n目前 adb_enabled=" + adb);
+                    + "\nCurrent adb_enabled=" + adb);
         }
 
         if (mAdservicesOff != null) {
@@ -464,78 +354,89 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                 mAdservicesOff.setChecked(true);
                 mAdservicesOff.setEnabled(false);
                 mAdservicesOff.setSummary(getString(R.string.adservices_summary)
-                        + "\n目前：無法讀取（DeviceConfig API 不可用）"
-                        + "\n請以 adb 指令確認：adb shell device_config get "
+                        + getString(R.string.adservices_unreadable)
+                        + "\nConfirm with an adb command: adb shell device_config get "
                         + AD_NAMESPACE + " " + AD_KEY);
             } else {
                 mAdservicesOff.setEnabled(true);
                 mAdservicesOff.setChecked(adsDisabled);
                 mAdservicesOff.setSummary(getString(R.string.adservices_summary)
-                        + "\n目前 adservice_enabled=" + (!adsDisabled));
+                        + "\nCurrent adservice_enabled=" + (!adsDisabled));
             }
         }
 
         if (mLogcatdStatus != null) {
             String v = readProp(PROP_LOGPERSISTD);
-            // ---- N 類：LineageOS 統計上報 現值 ----
+            // ---- Class N: LineageOS stats reporting, current value ----
             if (mStatsOff != null) {
                 int sc = getLineageSecureInt("stats_collection", 1);
-                mStatsOff.setChecked(sc == 0);   // value 0 = 已關閉 ⇒ 開關顯示為 ON ✓
+                mStatsOff.setChecked(sc == 0);   // value 0 = disabled, so the switch shows ON.
                 mStatsOff.setSummary("stats_collection=" + sc
-                        + (sc == 0 ? "（已關閉 ✓）" : "（★開啟中 ✗ 建議關閉 ✗）")
-                        + "\n樹內預設值為 true ⇒ 關掉之後不會再自己打開 ✓");
+                        + getString(sc == 0 ? R.string.stats_disabled : R.string.stats_on_recommend_off)
+                        + getString(R.string.stats_tree_default_note));
             }
 
-            String shown = (v == null || v.isEmpty()) ? "（空／未設定，通常代表未啟用）" : v;
+            String shown = (v == null || v.isEmpty()) ? getString(R.string.logpersistd_empty_note) : v;
             mLogcatdStatus.setSummary(getString(R.string.logcatd_summary)
-                    + "\n目前 persist.logd.logpersistd=" + shown
-                    + "\n驗證：adb shell getprop " + PROP_LOGPERSISTD
-                    + "\n（唯讀：需 device sepolicy 加 " + LOGPERSISTD_SEPOLICY_HINT + "）");
+                    + "\nCurrent persist.logd.logpersistd=" + shown
+                    + "\nVerify: adb shell getprop " + PROP_LOGPERSISTD
+                    + getString(R.string.logpersistd_readonly_note, LOGPERSISTD_SEPOLICY_HINT));
         }
 
         if (mCaptiveOff != null) {
             mCaptiveOff.setChecked(cpMode == 0);
             mCaptiveOff.setSummary(getString(R.string.captive_portal_summary)
-                    + "\n驗證：adb shell settings get global captive_portal_mode  (目前：" + cpMode + ")");
+                    + "\nVerify: adb shell settings get global captive_portal_mode  (current: " + cpMode + ")");
         }
 
         if (mDnsOn != null) {
             mDnsOn.setSummary(getString(R.string.private_dns_summary)
-                    + "\n驗證：adb shell settings get global " + DNS_MODE_GLOBAL
-                    + "  (目前：" + (dnsMode == null ? "未設定" : dnsMode) + ")");
+                    + "\nVerify: adb shell settings get global " + DNS_MODE_GLOBAL
+                    + "  (current: " + (dnsMode == null ? "unset" : dnsMode) + ")");
             mDnsOn.setChecked("hostname".equals(dnsMode) || "opportunistic".equals(dnsMode));
         }
 
         if (mDnsHost != null) mDnsHost.setText(dnsSpec == null ? "" : dnsSpec);
 
-        // ---- 定位模式（A 類）----
+        // ---- Location (class A): on/off switch plus an accuracy list ----
         int locMode = Settings.Secure.getInt(getContentResolver(),
                 Settings.Secure.LOCATION_MODE, LOCATION_MODE_OFF);
-        if (mLocationDeviceOnly != null) {
-            mLocationDeviceOnly.setChecked(locMode == LOCATION_MODE_DEVICE_ONLY);
-            mLocationDeviceOnly.setSummary(getString(R.string.location_summary)
-                    + "\n目前 location_mode=" + locMode
-                    + "（0=關 / 1=僅裝置 / 3=高精度）"
-                    + "\n驗證：adb shell settings get secure location_mode");
+        boolean locationOn = locMode != LOCATION_MODE_OFF;
+        if (mLocationOn != null) {
+            mLocationOn.setChecked(locationOn);
+            mLocationOn.setSummary(getString(R.string.location_summary)
+                    + "\nCurrent location_mode=" + locMode
+                    + getString(R.string.location_mode_note)
+                    + "\nVerify: adb shell settings get secure location_mode");
+        }
+        if (mLocationAccuracy != null) {
+            // The accuracy list only makes sense while location is on.
+            mLocationAccuracy.setEnabled(locationOn);
+            if (locationOn) {
+                // Mode 2 (battery saving) is not offered; any non-high-accuracy mode maps to device only.
+                mLocationAccuracy.setValue(String.valueOf(
+                        locMode == LOCATION_MODE_HIGH_ACCURACY ? LOCATION_MODE_HIGH_ACCURACY
+                                                               : LOCATION_MODE_DEVICE_ONLY));
+            }
         }
 
-        // ---- NFC（A 類）----
+        // ---- NFC (class A) ----
         int nfc = Settings.Global.getInt(getContentResolver(), "nfc_on", 1);
         if (mNfcOff != null) {
             mNfcOff.setChecked(nfc == 0);
             mNfcOff.setSummary(getString(R.string.nfc_summary)
-                    + "\n目前 nfc_on=" + nfc
-                    + "\n驗證：adb shell settings get global nfc_on");
+                    + "\nCurrent nfc_on=" + nfc
+                    + "\nVerify: adb shell settings get global nfc_on");
         }
 
-        // ---- Wi-Fi／藍牙永遠掃描（A 類）----
+        // ---- Wi-Fi/Bluetooth always scan (class A) ----
         int wifiScan = Settings.Global.getInt(getContentResolver(),
                 Settings.Global.WIFI_SCAN_ALWAYS_AVAILABLE, 0);
         if (mWifiScanOff != null) {
             mWifiScanOff.setChecked(wifiScan == 0);
             mWifiScanOff.setSummary(getString(R.string.wifi_scan_summary)
-                    + "\n目前 wifi_scan_always_enabled=" + wifiScan
-                    + "\n驗證：adb shell settings get global wifi_scan_always_enabled");
+                    + "\nCurrent wifi_scan_always_enabled=" + wifiScan
+                    + "\nVerify: adb shell settings get global wifi_scan_always_enabled");
         }
 
         int bleScan = Settings.Global.getInt(getContentResolver(),
@@ -543,40 +444,21 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mBleScanOff != null) {
             mBleScanOff.setChecked(bleScan == 0);
             mBleScanOff.setSummary(getString(R.string.ble_scan_summary)
-                    + "\n目前 ble_scan_always_enabled=" + bleScan
-                    + "\n驗證：adb shell settings get global ble_scan_always_enabled");
+                    + "\nCurrent ble_scan_always_enabled=" + bleScan
+                    + "\nVerify: adb shell settings get global ble_scan_always_enabled");
         }
 
-        // ---- 相機／麥克風總關（A 類，走 SensorPrivacyManager ✗ 非 Settings ✗）----
-        if (mSensorPrivacyOn != null) {
-            Boolean cam = isSensorPrivacyOn(Sensors.CAMERA);
-            Boolean mic = isSensorPrivacyOn(Sensors.MICROPHONE);
-            if (cam == null || mic == null) {
-                mSensorPrivacyOn.setEnabled(false);
-                mSensorPrivacyOn.setChecked(true);
-                mSensorPrivacyOn.setSummary(getString(R.string.sensor_privacy_summary)
-                        + "\n目前：無法讀取（SensorPrivacyManager 不可用）");
-            } else {
-                mSensorPrivacyOn.setEnabled(true);
-                mSensorPrivacyOn.setChecked(cam && mic);
-                mSensorPrivacyOn.setSummary(getString(R.string.sensor_privacy_summary)
-                        + "\n目前 相機=" + (cam ? "已封鎖" : "開放")
-                        + "／麥克風=" + (mic ? "已封鎖" : "開放")
-                        + "\n驗證：adb shell dumpsys sensor_privacy");
-            }
-        }
-
-        // ---- NTP（A 類；可能需重開機 ⚠️）----
+        // ---- NTP (class A; may require a reboot) ----
         if (mNtpServer != null) {
             String ntp = Settings.Global.getString(getContentResolver(), Settings.Global.NTP_SERVER);
             mNtpServer.setSummary(getString(R.string.ntp_summary)
-                    + "\n目前 ntp_server=" + (ntp == null || ntp.isEmpty() ? "（未設定）" : ntp)
-                    + "\n驗證：adb shell settings get global ntp_server"
-                    + "\n⚠️ 變更可能需要重開機才生效");
+                    + "\nCurrent ntp_server=" + (ntp == null || ntp.isEmpty() ? "(unset)" : ntp)
+                    + "\nVerify: adb shell settings get global ntp_server"
+                    + getString(R.string.ntp_reboot_note));
             mNtpServer.setText(ntp == null ? "" : ntp);
         }
 
-        // ---- 自動時間／時區（A 類）----
+        // ---- Auto time/timezone (class A) ----
         int autoTime = Settings.Global.getInt(getContentResolver(),
                 Settings.Global.AUTO_TIME, 1);
         int autoTz = Settings.Global.getInt(getContentResolver(),
@@ -584,13 +466,13 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         if (mAutoTimeOff != null) {
             mAutoTimeOff.setChecked(autoTime == 0 && autoTz == 0);
             mAutoTimeOff.setSummary(getString(R.string.auto_time_summary)
-                    + "\n目前 auto_time=" + autoTime + "／auto_time_zone=" + autoTz
-                    + "\n驗證：adb shell settings get global auto_time");
+                    + "\nCurrent auto_time=" + autoTime + " / auto_time_zone=" + autoTz
+                    + "\nVerify: adb shell settings get global auto_time");
         }
     }
 
     // =====================================================================
-    //  A 類：純執行期開關
+    //  Class A: pure runtime switches
     // =====================================================================
 
     private boolean setAgpsDisabled(boolean disabled) {
@@ -599,7 +481,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                     Settings.Global.ASSISTED_GPS_ENABLED, disabled ? 0 : 1);
             return true;
         } catch (Exception e) {
-            toast("AGPS：" + e.getClass().getSimpleName());
+            toast(getString(R.string.agps_error, e.getClass().getSimpleName()));
             return false;
         }
     }
@@ -610,12 +492,12 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                     Settings.Global.ADB_ENABLED, disabled ? 0 : 1);
             return true;
         } catch (Exception e) {
-            toast("USB adb：" + e.getClass().getSimpleName());
+            toast(getString(R.string.adb_error, e.getClass().getSimpleName()));
             return false;
         }
     }
 
-    /** 讀 LineageSettings（★與 AOSP 的 Settings.Secure 是【不同】provider ✗★） */
+    /** Reads LineageSettings (a DIFFERENT provider from AOSP's Settings.Secure). */
     private int getLineageSecureInt(String name, int def) {
         try (android.database.Cursor c = getContentResolver().query(
                 android.net.Uri.parse(LINEAGE_SECURE_URI),
@@ -627,12 +509,12 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                 }
             }
         } catch (Exception e) {
-            // 讀不到 ⇒ 回預設值 ✓ 不讓單一項失敗讓 App 崩潰 ✓
+            // On read failure return the default, so a single failure does not crash the app.
         }
         return def;
     }
 
-    /** 寫 LineageSettings；回傳「有沒有拋出例外」（真正的成功與否由呼叫端讀回驗證 ✓） */
+    /** Writes LineageSettings; returns whether an exception was thrown (real success is verified by the caller reading back). */
     private boolean setLineageSecureInt(String name, int value) {
         try {
             android.content.ContentValues cv = new android.content.ContentValues();
@@ -645,7 +527,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         }
     }
 
-    /** 通用：寫入 Settings.Global 整數（回傳是否成功） */
+    /** Generic: write an integer to Settings.Global (returns whether it succeeded). */
     private boolean setGlobalInt(String key, int value) {
         try {
             Settings.Global.putInt(getContentResolver(), key, value);
@@ -655,51 +537,34 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         }
     }
 
-    /** 定位模式：開啟 = 僅裝置（1，不用網路定位）；關閉 = 恢復高精度（3） */
-    private boolean setLocationDeviceOnly(boolean deviceOnly) {
+    /** Writes a location_mode value: 0=off / 1=device only / 3=high accuracy. */
+    private boolean setLocationMode(int mode) {
         try {
-            Settings.Secure.putInt(getContentResolver(), Settings.Secure.LOCATION_MODE,
-                    deviceOnly ? LOCATION_MODE_DEVICE_ONLY : 3);
+            Settings.Secure.putInt(getContentResolver(), Settings.Secure.LOCATION_MODE, mode);
             return true;
         } catch (Exception e) {
-            toast("定位模式：" + e.getClass().getSimpleName());
+            toast(getString(R.string.location_mode_error, e.getClass().getSimpleName()));
             return false;
         }
+    }
+
+    /** The accuracy the user last picked; the real value still comes from the system setting. */
+    private int readAccuracyPref() {
+        return getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getInt(PREF_LOCATION_ACCURACY, LOCATION_MODE_HIGH_ACCURACY);
+    }
+
+    private void saveAccuracyPref(int mode) {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                .putInt(PREF_LOCATION_ACCURACY, mode).apply();
     }
 
     private boolean setNfcDisabled(boolean disabled) {
         return setGlobalInt("nfc_on", disabled ? 0 : 1);
     }
 
-    /**
-     * 相機／麥克風總關。
-     * 走 SensorPrivacyManager.setSensorPrivacy(Sensors.X, true) —— 狀態存 XML ✗ 非 Settings ✗
-     * 需 MANAGE_SENSOR_PRIVACY（@SystemApi ✓ platform 簽章 ＋ privileged 符合 ✓）。
-     */
-    private boolean setSensorPrivacy(boolean enabled) {
-        if (mSensorPrivacy == null) return false;
-        try {
-            mSensorPrivacy.setSensorPrivacy(Sensors.CAMERA, enabled);
-            mSensorPrivacy.setSensorPrivacy(Sensors.MICROPHONE, enabled);
-            return true;
-        } catch (Throwable t) {
-            toast("SensorPrivacy：" + t.getClass().getSimpleName());
-            return false;
-        }
-    }
-
-    /** 讀取單一感測器的隱私狀態；不可用時回傳 null（不假裝 ✓） */
-    private Boolean isSensorPrivacyOn(int sensor) {
-        if (mSensorPrivacy == null) return null;
-        try {
-            return mSensorPrivacy.isSensorPrivacyEnabled(sensor);
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
     // =====================================================================
-    //  廣告框架（DeviceConfig）
+    //  Advertising framework (DeviceConfig)
     // =====================================================================
 
     private Boolean readAdServicesDisabled() {
@@ -707,7 +572,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
             boolean enabled = DeviceConfig.getBoolean(AD_NAMESPACE, AD_KEY, false);
             return !enabled;
         } catch (Throwable t) {
-            // 落到後備路徑
+            // Fall through to the fallback path
         }
         String v = execDeviceConfig("get", AD_NAMESPACE, AD_KEY);
         if (v == null) return null;
@@ -721,7 +586,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                 return true;
             }
         } catch (Throwable t) {
-            // 落到後備路徑
+            // Fall through to the fallback path
         }
         String r = execDeviceConfig("put", AD_NAMESPACE, AD_KEY, value);
         if (r == null) return false;
@@ -763,7 +628,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
             Settings.Global.putInt(getContentResolver(), Settings.Global.CAPTIVE_PORTAL_MODE,
                     disabled ? 0 : Settings.Global.CAPTIVE_PORTAL_MODE_PROMPT);
         } catch (Exception e) {
-            toast("Captive portal：" + e.getClass().getSimpleName());
+            toast(getString(R.string.captive_portal_error, e.getClass().getSimpleName()));
         }
         syncFromSystem();
     }
@@ -777,7 +642,7 @@ public class PrivacySettingsActivity extends PreferenceActivity {
             }
             Settings.Global.putString(getContentResolver(), DNS_MODE_GLOBAL, mode);
         } catch (Exception e) {
-            toast("Private DNS：" + e.getClass().getSimpleName());
+            toast(getString(R.string.private_dns_error, e.getClass().getSimpleName()));
         }
         syncFromSystem();
     }
@@ -789,18 +654,13 @@ public class PrivacySettingsActivity extends PreferenceActivity {
                 Settings.Global.putString(getContentResolver(), DNS_MODE_GLOBAL, "hostname");
             }
         } catch (Exception e) {
-            toast("DoT 主機名：" + e.getClass().getSimpleName());
+            toast(getString(R.string.dot_hostname_error, e.getClass().getSimpleName()));
         }
         syncFromSystem();
     }
 
     /**
-     * 等級一鍵套用。
-     *   最低 minimal ：維持現狀 ✓
-     *   標準 standard：AGPS 0 ＋ adservices 0 ＋ 相機麥克風封鎖 ＋ 定位僅裝置 ＋ 掃描關 ✓
-     *   嚴格 strict  ：標準 ＋ captive portal 0 ＋ USB adb 0 ＋ 自動時間關 ✓
-     *   自訂 custom  ：不自動套用 ✓
-     * 任何一項失敗都列出，不假裝全部成功 ✗
+     * One-tap tier application (minimal / standard / strict / custom); any single failure is listed.
      */
     private void applyTier(String tier) {
         List<String> failed = new ArrayList<>();
@@ -808,35 +668,34 @@ public class PrivacySettingsActivity extends PreferenceActivity {
         switch (tier) {
             case "standard":
             case "strict": {
-                if (!setAgpsDisabled(true)) failed.add("AGPS→0");
-                if (!setAdServicesDisabled(true)) failed.add("adservices→0");
-                if (!setSensorPrivacy(true)) failed.add("相機麥克風→封鎖");
-                if (!setLocationDeviceOnly(true)) failed.add("定位→僅裝置");
-                if (!setGlobalInt("wifi_scan_always_enabled", 0)) failed.add("WiFi掃描→0");
-                if (!setGlobalInt("ble_scan_always_enabled", 0)) failed.add("BT掃描→0");
-                if (!setNfcDisabled(true)) failed.add("NFC→0");
+                if (!setAgpsDisabled(true)) failed.add("AGPS->0");
+                if (!setAdServicesDisabled(true)) failed.add("adservices->0");
+                if (!setLocationMode(LOCATION_MODE_DEVICE_ONLY)) failed.add("location->device only");
+                saveAccuracyPref(LOCATION_MODE_DEVICE_ONLY);
+                if (!setGlobalInt("wifi_scan_always_enabled", 0)) failed.add("WiFi scan->0");
+                if (!setGlobalInt("ble_scan_always_enabled", 0)) failed.add("BT scan->0");
+                if (!setNfcDisabled(true)) failed.add("NFC->0");
                 if ("strict".equals(tier)) {
                     setCaptivePortalDisabled(true);
-                    if (!setAdbDisabled(true)) failed.add("adb→0");
-                    if (!setGlobalInt("auto_time", 0)) failed.add("auto_time→0");
-                    if (!setGlobalInt("auto_time_zone", 0)) failed.add("auto_time_zone→0");
+                    if (!setAdbDisabled(true)) failed.add("adb->0");
+                    if (!setGlobalInt("auto_time", 0)) failed.add("auto_time->0");
+                    if (!setGlobalInt("auto_time_zone", 0)) failed.add("auto_time_zone->0");
                 }
                 break;
             }
             case "custom":
-                toast("「自訂」不自動套用任何設定，請手動調整下方開關");
+                toast(getString(R.string.tier_custom_notice));
                 break;
             case "minimal":
             default:
-                toast("「最低」維持現狀，未變更任何系統設定");
+                toast(getString(R.string.tier_minimal_notice));
                 break;
         }
 
         if (!failed.isEmpty()) {
-            toast("等級「" + tier + "」有項目失敗：" + String.join("、", failed)
-                    + "（請用摘要中的 adb 指令確認）");
+            toast(getString(R.string.tier_failed, tier, String.join(", ", failed)));
         } else if (!"custom".equals(tier) && !"minimal".equals(tier)) {
-            toast("已套用等級「" + tier + "」");
+            toast(getString(R.string.tier_applied, tier));
         }
         syncFromSystem();
     }

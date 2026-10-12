@@ -3,9 +3,7 @@
      SPDX-FileCopyrightText: The LineageOS Project
      SPDX-License-Identifier: Apache-2.0
 
-     每個開關都對應真實系統設定，並在摘要中附上【可重現的驗證指令】✓
-     尚未實作／無法切換的項目只以說明列出，不給假開關 ✗
-     目錄來源：~/nphone/live/PRIVACY_FULL_CATALOG.md
+     Every switch maps to a real system setting; the catalog lives in notes/privacy-app.md.
 -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -23,25 +21,28 @@
             android:title="@string/verify_hint"
             android:summary="@string/verify_hint" />
 
+        <Preference
+            android:key="app_language"
+            android:title="@string/app_language_title"
+            android:summary="@string/app_language_summary"
+            android:persistent="false" />
+
     </PreferenceCategory>
 
-    <!-- B 類：B3 的入口 —— 把使用者送到【系統自己的】隱私儀表板 ✓
-         理由：自造 per-app 清單會落後 AOSP 改版 ✗ 平台 UI 才是真相來源 ✓
-         title/summary 用字面值 ⇒ 不必動 strings.xml ✓ 減少出錯面 ✓ -->
-    <PreferenceCategory android:title="隱私儀表板（B 類）">
+    <!-- Class B: entry point to the system's own privacy dashboard (the platform UI is the source of truth). -->
+    <PreferenceCategory android:title="@string/cat_privacy_dashboard">
 
         <Preference
             android:key="privacy_dashboard"
-            android:title="開啟系統隱私儀表板"
-            android:summary="檢視／調整每個 App 的相機、麥克風、定位權限（交由平台 UI 處理 ✓）"
+            android:title="@string/privacy_dashboard_title"
+            android:summary="@string/privacy_dashboard_summary"
             android:persistent="false" />
 
-        <!-- N 類：LineageOS 統計上報（stats_collection ✓ 機制已實機驗證 ✓）
-             樹內預設 true（開啟 ✗）⇒ 提供關閉開關 ✓；用字面標題 ⇒ 不必動 strings.xml ✓ -->
+        <!-- Class N: LineageOS stats reporting (stats_collection); tree default is enabled. -->
         <SwitchPreference
             android:key="stats_off"
-            android:title="關閉 LineageOS 統計上報"
-            android:summary="stats_collection=0（關閉）／1（開啟）。樹內預設為開啟 ⇒ 可確實關閉 ✓"
+            android:title="@string/stats_off_title"
+            android:summary="@string/stats_off_summary"
             android:persistent="false" />
 
     </PreferenceCategory>
@@ -95,9 +96,16 @@
     <PreferenceCategory android:title="@string/cat_location">
 
         <SwitchPreference
-            android:key="location_device_only"
+            android:key="location_on"
             android:title="@string/location_title"
             android:summary="@string/location_summary"
+            android:persistent="false" />
+
+        <ListPreference
+            android:key="location_accuracy"
+            android:title="@string/location_accuracy_title"
+            android:entries="@array/location_accuracy_entries"
+            android:entryValues="@array/location_accuracy_values"
             android:persistent="false" />
 
         <SwitchPreference
@@ -116,8 +124,8 @@
 
     <PreferenceCategory android:title="@string/cat_sensors">
 
-        <SwitchPreference
-            android:key="sensor_privacy_on"
+        <Preference
+            android:key="sensor_privacy_open"
             android:title="@string/sensor_privacy_title"
             android:summary="@string/sensor_privacy_summary"
             android:persistent="false" />
@@ -129,18 +137,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cat_radio">
-
-        <!-- 2026-10-08：無 SIM 自動飛航（★實測驅動 ✗★）
-             由來 ✓：沒插 SIM 時 dumpsys batterystats 顯示螢幕關閉/doze 段
-                     316.5 mAh ✗ 其中 299 mAh 是 mobile_radio ✗（modem 一直掃描註冊 ✗）
-             機制 ✓：Settings.Global.putInt(AIRPLANE_MODE_ON, 1) 系統即生效 ✓（已實測 ✓）
-             設計 ✓：只在【使用者切換】時動作 ✓ 不主動在開機時改 ✗（避免使用者莫名斷網 ✗）
-             標題／摘要用字面值 ⇒ 不必為此動 strings.xml ✓（摘要內容由程式動態覆寫 ✓） -->
-        <SwitchPreference
-            android:key="nosim_airplane_off"
-            android:title="無 SIM 時自動開啟飛航"
-            android:summary="沒插 SIM 卡時，讓 modem 停止持續掃描以省電（無線電佔待機耗電約 93% ✗）"
-            android:persistent="false" />
 
         <SwitchPreference
             android:key="nfc_off"

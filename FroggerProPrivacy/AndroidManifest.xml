@@ -6,38 +6,28 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.froggerpro.privacy">
 
-    <!-- 寫入 secure/global settings 需要（併同 privapp whitelist ✓） -->
+    <!-- Needed to write secure/global settings (together with the privapp whitelist). -->
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
-    <!-- LineageSettings（content://lineagesettings ✓）的寫入權限
-         lineageos.permission.WRITE_SETTINGS 屬 signature|privileged ✓
-         本 App 為 platform 簽章 ＋ privileged ⇒ 由【簽章】路徑授予 ✓
-         ⇒ ★不放進 privapp 白名單 ✗★（同 MANAGE_SENSOR_PRIVACY 的處理 ✓） -->
+    <!-- Write permission for LineageSettings (content://lineagesettings).
+         lineageos.permission.WRITE_SETTINGS is signature|privileged.
+         This app is platform-signed and privileged, so it is granted via the signature path;
+         it is NOT added to the privapp whitelist. -->
     <uses-permission android:name="lineageos.permission.WRITE_SETTINGS" />
 
     <!--
-        DeviceConfig（廣告框架 AdServices 等）讀寫需要。
-        兩者皆為 signature 級（protectionLevel = signature|verifier|configurator /
-        signature|preinstalled），本 App 以 platform 憑證簽章 ⇒ 符合 ✓
-        （依 frameworks/base/core/res/AndroidManifest.xml:4947、4962 ✓）
+        DeviceConfig permissions are signature-level; this app is signed with the platform
+        certificate, so it qualifies. (per frameworks/base/core/res/AndroidManifest.xml)
     -->
     <uses-permission android:name="android.permission.WRITE_DEVICE_CONFIG" />
     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
-
-    <!--
-        相機／麥克風系統層封鎖需要。
-        SensorPrivacyManager.setSensorPrivacy() 為 @SystemApi 且
-        @RequiresPermission(MANAGE_SENSOR_PRIVACY)
-        （SensorPrivacyManager.java:795-801 ✓）；protectionLevel = signature
-        ⇒ 本 App 以 platform 憑證簽章 ⇒ 符合 ✓
-    -->
-    <uses-permission android:name="android.permission.MANAGE_SENSOR_PRIVACY" />
 
     <application
         android:label="@string/app_name"
         android:icon="@android:drawable/ic_lock_lock"
         android:theme="@android:style/Theme.DeviceDefault.Settings"
+        android:localeConfig="@xml/locales_config"
         android:allowBackup="false">
 
         <activity
