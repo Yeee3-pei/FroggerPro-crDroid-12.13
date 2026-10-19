@@ -40,6 +40,12 @@
         <item>0</item> <item>2.0</item> <item>2.0</item>
         <item>0</item> <item>3.5</item> <item>3.5</item>
         <item>0</item> <item>7.0</item> <item>7.0</item>
+        <!-- Front camera (1). The lens selector only lists presets for cameras named here, so
+             without these the front camera has no zoom buttons at all. The camera reports a
+             maximum digital zoom of 8.0, so these stay inside its range. -->
+        <item>1</item> <item>1.0</item> <item>1.0</item>
+        <item>1</item> <item>2.0</item> <item>2.0</item>
+        <item>1</item> <item>4.0</item> <item>4.0</item>
     </string-array>
 
     <!-- An array of triplets made of (camera ID, qualities, frame rates).
