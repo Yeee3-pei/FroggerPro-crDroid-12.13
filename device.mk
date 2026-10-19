@@ -554,6 +554,12 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Nothing Ndot fonts, installed by fonts.mk.
 -include device/nothing/froggerPro/fonts.mk
 
+# Media profile override, installed by media.mk.
+-include device/nothing/froggerPro/media.mk
+
+# Vendor blobs this tree installs itself, installed by vendor_blobs.mk.
+-include device/nothing/froggerPro/vendor_blobs.mk
+
 # Stock services and odm content ported as copies rather than rebuilt.
 $(call inherit-product, vendor/nothing/FroggerPro/c_blobs.mk)
 $(call inherit-product, vendor/nothing/FroggerPro/odm_content.mk)
