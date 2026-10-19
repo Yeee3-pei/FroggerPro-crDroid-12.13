@@ -47,5 +47,12 @@ allow hal_face_default hal_graphics_mapper_hwservice:hwservice_manager find;
 allow hal_face_default face_vendor_data_file:dir { create open read write search getattr add_name remove_name };
 allow hal_face_default face_vendor_data_file:file { create open read write getattr setattr append map unlink rename };
 
+# Network location (LOWI). The lowi server gets a file descriptor from the location HAL, and the
+# location HAL itself needs vndbinder; this tree's vendor_location rules grant neither:
+#   avc: denied { use }   scontext=u:r:vendor_location_lowi_server:s0 tcontext=u:r:vendor_location:s0      tclass=fd
+#   avc: denied { write } scontext=u:r:vendor_location:s0            tcontext=u:object_r:vndbinder_device:s0 tclass=chr_file
+allow vendor_location_lowi_server vendor_location:fd use;
+vndbinder_use(vendor_location)
+
 # Not applied: hal_fingerprint_default default_prop and vendor_init bluetooth_prop are both
 # rejected by neverallow at build time.
