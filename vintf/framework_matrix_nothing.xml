@@ -42,4 +42,19 @@
             <instance>default</instance>
         </interface>
     </hal>
+    <!-- Nothing camera services: declared by the fragments added to DEVICE_MANIFEST_FILE. -->
+    <hal format="aidl" optional="true">
+        <name>vendor.noth.hardware.camera</name>
+        <interface>
+            <name>INtCamService</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+    <hal format="aidl" optional="true">
+        <name>com.nothing.camera.postproc</name>
+        <interface>
+            <name>IPostProcService</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
 </compatibility-matrix>

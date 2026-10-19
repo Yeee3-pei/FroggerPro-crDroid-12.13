@@ -5,4 +5,6 @@
 # Conflicting FqInstance, so check the merged manifest before adding one.
 DEVICE_MANIFEST_FILE += \
     $(DEVICE_PATH)/vintf/manifest_dedup.xml \
-    vendor/nothing/FroggerPro/etc/vintf/manifest/android.hardware.sensors.froggerpro-multihal.xml
+    vendor/nothing/FroggerPro/etc/vintf/manifest/android.hardware.sensors.froggerpro-multihal.xml \
+    vendor/nothing/FroggerPro/etc/vintf/manifest/vendor.noth.hardware.camera-service.xml \
+    vendor/nothing/FroggerPro/etc/vintf/manifest/com.nothing.camera.postproc-impl.xml
