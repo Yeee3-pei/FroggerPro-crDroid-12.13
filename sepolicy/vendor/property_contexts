@@ -12,6 +12,9 @@ persist.vendor.overlay.fp_model        u:object_r:vendor_exported_finger_prop:s0
 persist.vendor.overlay.fp_algo         u:object_r:vendor_exported_finger_prop:s0
 persist.vendor.goodix.dump_data        u:object_r:vendor_exported_finger_prop:s0
 persist.vendor.noth.dump_data          u:object_r:vendor_exported_finger_prop:s0
+# The Goodix HAL (libgf_hal.so, loaded by fingerprint.default.so in the hal_fingerprint_default
+# domain) reads this property; unlabelled it falls to default_prop, which that domain cannot read.
+ro.vendor.extension_library            u:object_r:vendor_exported_finger_prop:s0
 persist.vendor.overlay.fp_vendor       u:object_r:vendor_exported_finger_prop:s0
 persist.vendor.overlay.fp_serial       u:object_r:vendor_exported_finger_prop:s0
 ro.vendor.display.array.lux            u:object_r:vendor_display_prop:s0
