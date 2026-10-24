@@ -1,0 +1,18 @@
+#
+# SPDX-FileCopyrightText: The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+# SELinux types for the ported Nothing camera services.
+#
+# The stock service_contexts was dropped because its types lacked the
+# attribute set AOSP allows; the neverallow in system/sepolicy/private
+# service.te rejects a mapping onto a plain service_manager_type that no
+# domain may add. Declaring the types with hal_service_type and
+# protected_service, as the stock policy does, keeps the mapping legal and
+# grants add/find through the existing HAL macros.
+
+type vendor_hal_noth_camera_service, hal_service_type, protected_service, service_manager_type;
+
+# IPostProcService is not declared here: the vendor tree already maps that name
+# to vendor_hal_camera_service, and vendor_service_contexts_test rejects a
+# second, differently typed mapping for the same name.

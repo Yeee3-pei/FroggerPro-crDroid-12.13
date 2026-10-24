@@ -10,3 +10,13 @@
 # name to the existing hal_thermal_service grants add/find with no new
 # allow.
 vendor.noth.hardware.thermal.IThermalControl/default    u:object_r:hal_thermal_service:s0
+
+# Ported Nothing camera service. The type is declared with the attribute set
+# AOSP allows (vendor_camera_services.te), so the mapping does not hit the
+# neverallow that rejected the ported stock file. IPostProcService already has
+# a mapping in the vendor tree and is deliberately not repeated here.
+vendor.noth.hardware.camera.INtCamService/default        u:object_r:vendor_hal_noth_camera_service:s0
+
+# The stability HAL publishes this name; without a mapping it resolves to
+# default_android_service and the service's own add is denied.
+vendor.noth.hardware.stability.IStability/default        u:object_r:vendor_hal_stability_service:s0

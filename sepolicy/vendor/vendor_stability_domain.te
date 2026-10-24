@@ -1,0 +1,43 @@
+#
+# SPDX-FileCopyrightText: The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+# Domain for the stock-ported Nothing stability HAL.
+#
+# vendor.noth.hardware.stability-service has an rc and a shipped binary but no
+# domain, so it never ran. The exec type is already declared in
+# froggerpro_ported_types.te, so only the domain is added here.
+#
+# The allow rules are written from the device's own denials, not from guesswork:
+# without them the process aborts on startup and init gives up after four exits.
+#
+#   failed to open '/dev/ntfeature': (Permission denied)
+#   avc: denied { read } for name="ntfeature" scontext=vendor_stability_default
+#        tcontext=object_r:vendor_ntf_file:s0 tclass=file
+#   avc: denied { call } for scontext=vendor_stability_default
+#        tcontext=object_r:servicemanager:s0 tclass=binder
+
+type vendor_stability_default, domain, halserverdomain;
+init_daemon_domain(vendor_stability_default)
+
+# Service type for the AIDL interface this HAL publishes. Without a mapping in
+# service_contexts the name resolves to default_android_service and the add is
+# denied: avc: denied { add } name=vendor.noth.hardware.stability.IStability/default
+# tcontext=object_r:default_android_service:s0 tclass=service_manager
+type vendor_hal_stability_service, hal_service_type, protected_service, service_manager_type;
+
+binder_use(vendor_stability_default)
+
+# The binary opens, reads and then mmaps the node, and publishes its AIDL
+# interface through add_service. Every line below comes from a real denial on
+# the device; without them the process aborts on startup with SIGABRT and init
+# gives up after four exits.
+#
+#   avc: denied { open } path="/dev/ntfeature" tcontext=object_r:vendor_ntf_file:s0 tclass=file
+#   avc: denied { read } path="/dev/ntfeature" tcontext=object_r:vendor_ntf_file:s0 tclass=file
+#   avc: denied { map }  path="/dev/ntfeature" tcontext=object_r:vendor_ntf_file:s0 tclass=file
+#   avc: denied { add }  name=vendor.noth.hardware.stability.IStability/default
+#        tcontext=object_r:vendor_hal_stability_service:s0 tclass=service_manager
+allow vendor_stability_default vendor_ntf_file:file { open read map };
+
+add_service(vendor_stability_default, vendor_hal_stability_service)
