@@ -16,6 +16,7 @@ AB_OTA_PARTITIONS += \
     init_boot \
     odm \
     product \
+    pvmfw \
     recovery \
     system_dlkm \
     system_ext \
@@ -35,28 +36,56 @@ BOARD_SHIPPING_API_LEVEL := 202404
 # which is the LineageOS default path (vendor/lineage/config/common.mk:38-44).
 
 # AVB
-BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
+# --flags 3 disabled verity and verification, which is why the chain was never
+# enforced. It is dropped so verification is live; the images are signed with the
+# AOSP test key, so the bootloader must stay unlocked. If a build with this fails
+# to boot, re-add the flag rather than fighting the chain:
+#   fastboot flash vbmeta        <backup>/vbmeta.img
+#   fastboot flash vbmeta_system <backup>/vbmeta_system.img
+#   fastboot flash vbmeta_vendor <backup>/vbmeta_vendor.img
+# BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
 
-BOARD_AVB_BOOT_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+# AVB signing key. LineageOS keeps private keys outside the repository, in
+# vendor/lineage-priv; fall back to the AOSP test key when they are absent so a
+# checkout without keys still builds.
+FROGGERPRO_AVB_KEY := $(strip $(wildcard vendor/lineage-priv/keys/avb.pem))
+ifeq ($(FROGGERPRO_AVB_KEY),)
+FROGGERPRO_AVB_KEY := external/avb/test/data/testkey_rsa4096.pem
+endif
+
+BOARD_AVB_KEY_PATH := $(FROGGERPRO_AVB_KEY)
+BOARD_AVB_ALGORITHM := SHA256_RSA4096
+
+BOARD_AVB_BOOT_KEY_PATH := $(FROGGERPRO_AVB_KEY)
 BOARD_AVB_BOOT_ALGORITHM := SHA256_RSA4096
-BOARD_AVB_BOOT_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
+# Stock values read from the dumped vbmeta*.img (avbtool info_image), not derived:
+# rollback indices must never advance past stock, or a later flash of stock images is
+# refused. PLATFORM_SECURITY_PATCH_TIMESTAMP moves with every build and overshoots.
+BOARD_AVB_BOOT_ROLLBACK_INDEX := 1775347200
 BOARD_AVB_BOOT_ROLLBACK_INDEX_LOCATION := 3
 
-BOARD_AVB_RECOVERY_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_RECOVERY_KEY_PATH := $(FROGGERPRO_AVB_KEY)
 BOARD_AVB_RECOVERY_ALGORITHM := SHA256_RSA4096
-BOARD_AVB_RECOVERY_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
+BOARD_AVB_RECOVERY_ROLLBACK_INDEX := 1
 BOARD_AVB_RECOVERY_ROLLBACK_INDEX_LOCATION := 1
 
-BOARD_AVB_VBMETA_SYSTEM := product system system_ext
-BOARD_AVB_VBMETA_SYSTEM_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_VBMETA_SYSTEM := pvmfw product system system_ext
+# pvmfw is a partition the build produces (device.mk sets PRODUCT_BUILD_PVMFW_IMAGE), so it
+# can be listed here directly: images-for-partitions expands it to $(PRODUCT_OUT)/pvmfw.img
+# and the file exists by the time vbmeta_system is made, which also makes the image a
+# declared input of vbmeta_system.img -- re-extracting a new pvmfw now forces a rebuild.
+# The partition is not in the stock GPT as a separate entry; stock's vbmeta_system names it
+# and BOARD_PVMFWIMAGE_PARTITION_SIZE below matches the 1 MiB stock image.
+BOARD_AVB_VBMETA_SYSTEM_KEY_PATH := $(FROGGERPRO_AVB_KEY)
 BOARD_AVB_VBMETA_SYSTEM_ALGORITHM := SHA256_RSA4096
-BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
+BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX := 1782864000
 BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX_LOCATION := 2
 
+
 BOARD_AVB_VBMETA_VENDOR := odm system_dlkm vendor vendor_dlkm
-BOARD_AVB_VBMETA_VENDOR_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_VBMETA_VENDOR_KEY_PATH := $(FROGGERPRO_AVB_KEY)
 BOARD_AVB_VBMETA_VENDOR_ALGORITHM := SHA256_RSA4096
-BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
+BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX := 1775347200
 BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX_LOCATION := 4
 
 BOARD_MOVE_GSI_AVB_KEYS_TO_VENDOR_BOOT := true
@@ -210,6 +239,7 @@ BOARD_DTBOIMG_PARTITION_SIZE := 0x3200000
 BOARD_FLASH_BLOCK_SIZE := 131072 # (BOARD_KERNEL_PAGESIZE * 32)
 BOARD_INIT_BOOT_IMAGE_PARTITION_SIZE := 0x800000
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 0x6400000
+BOARD_PVMFWIMAGE_PARTITION_SIZE := 0x100000
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 0x6000000
 
 BOARD_ODMIMAGE_FILE_SYSTEM_TYPE := erofs
