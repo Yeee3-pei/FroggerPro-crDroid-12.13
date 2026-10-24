@@ -34,11 +34,13 @@ This tree alone does not build a bootable image. It also needs:
   `lib64/bm5a*.bin` model files; the current makefiles do not install them.
 - **USB** has been observed re-enumerating between its adb and MTP identities.
   The cause has not been identified.
-- **Verified boot provides no protection.** `BoardConfig.mk` signs AVB with the
-  AOSP public test key (`external/avb/test/data/testkey_rsa4096.pem`) and builds
-  vbmeta with `--flags 3`, which disables verity and verification. Keep the
+- **Verified boot is signed with a public test key.** `BoardConfig.mk` signs AVB
+  with the AOSP public test key (`external/avb/test/data/testkey_rsa4096.pem`).
+  Verity and verification are left enabled, and the vbmeta chain covers the
+  `pvmfw` partition as stock does, so the chain is enforced end to end. Keep the
   bootloader unlocked: locking it against these images is not supported and can
-  leave the device unbootable.
+  leave the device unbootable, and a signed-by-nobody chain is not a guarantee of
+  anything but the test key.
 - Builds are `userdebug`.
 
 ## Verification
