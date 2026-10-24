@@ -28,7 +28,10 @@ $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 # Cost: the debug-oriented userdebug_or_eng() SELinux conditionals apply again, and a shell
 # without root can read dmesg and use the debug tooling. That is the AOSP userdebug default,
 # which LineageOS narrows deliberately; this port trades it for working signature spoofing.
-PRODUCT_NOT_DEBUGGABLE_IN_USERDEBUG := false
+# Left empty, NOT := false. build/make/core/soong_extra_config.mk hands the raw value to
+# add_json_bool, which takes any non-empty string as true, so ":=" false kept the restriction
+# on and ro.debuggable stayed 0. Empty is what "not set" means here.
+PRODUCT_NOT_DEBUGGABLE_IN_USERDEBUG :=
 
 PRODUCT_BRAND := Nothing
 PRODUCT_DEVICE := FroggerPro
