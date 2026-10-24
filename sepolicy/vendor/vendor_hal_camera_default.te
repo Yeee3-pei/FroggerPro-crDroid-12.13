@@ -1,0 +1,58 @@
+#
+# SPDX-FileCopyrightText: The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+# Domain for the ported Nothing camera HAL (INtCamService).
+#
+# The exec label is declared in froggerpro_ported_types.te. Without a domain
+# init has nothing to transition to, refuses to start the service, and the
+# binary would otherwise run as u:r:init:s0.
+#
+# Attribute set follows the stock policy's own typeattributeset statements.
+#
+# The allow rules are written from the device's own denials. Without them the
+# service starts but reports "Number of camera is 0", because it cannot reach
+# the framework camera service:
+#
+#   avc: denied { find } for name=android.frameworks.cameraservice.service.ICameraService/default
+#        scontext=vendor_hal_camera_default tcontext=object_r:fwk_camera_service:s0
+#        tclass=service_manager
+#   avc: denied { read } for name="u:object_r:camera_config_prop:s0"
+#        scontext=vendor_hal_camera_default tcontext=object_r:camera_config_prop:s0 tclass=file
+
+type vendor_hal_camera_default, domain, hal_camera, hal_camera_server, hal_graphics_allocator, hal_graphics_allocator_server, halclientdomain, halserverdomain;
+init_daemon_domain(vendor_hal_camera_default)
+
+allow vendor_hal_camera_default fwk_camera_service:service_manager find;
+# get_prop(), not r_file_perms: property.te neverallows ioctl/lock on property files,
+# and r_file_perms carries both.
+get_prop(vendor_hal_camera_default, camera_config_prop)
+# The camera HAL reads the same /dev/ntfeature node the stability HAL uses. It
+# fails the same way the stability HAL did, one permission per boot, so grant the
+# whole read set rather than iterating:
+#   avc: denied { open } for path="/dev/ntfeature" tcontext=object_r:vendor_ntf_file:s0 tclass=file
+#   avc: denied { read } for name="ntfeature" tcontext=object_r:vendor_ntf_file:s0 tclass=file
+#   E vendor.noth.hardware.camera-service: failed to open '/dev/ntfeature':(Permission denied)
+allow vendor_hal_camera_default vendor_ntf_file:file r_file_perms;
+
+# The HAL waits for the Nothing postproc service while it starts and aborts when
+# the lookup fails (loopCheckService -> LOG(FATAL), four exits and init gives up):
+#   avc: denied { find } for name=com.nothing.camera.postproc.IPostProcService/default
+#        scontext=vendor_hal_camera_default tcontext=object_r:vendor_hal_camera_service:s0
+#        tclass=service_manager
+# The service itself is registered by the QTI camera provider, which declares the
+# interface in its rc and in the vendor VINTF manifest.
+allow vendor_hal_camera_default vendor_hal_camera_service:service_manager find;
+
+# The HAL both binds to and reads meminfo from the QTI camera provider stack; both come
+# straight from the device's denials:
+#   avc: denied { call } scontext=vendor_hal_camera_default tcontext=hal_camera_default tclass=binder
+#   avc: denied { read } name="meminfo" scontext=vendor_hal_camera_default tcontext=proc_meminfo
+
+allow vendor_hal_camera_default hal_camera_default:binder call;
+allow vendor_hal_camera_default proc_meminfo:file r_file_perms;
+
+# The HAL serves its own AIDL name but could not publish it; the name is already
+# mapped to vendor_hal_noth_camera_service and only the add grant was missing
+# (dmesg: avc denied { add } name=vendor.noth.hardware.camera.INtCamService/default).
+add_service(vendor_hal_camera_default, vendor_hal_noth_camera_service)
