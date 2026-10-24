@@ -62,9 +62,6 @@ PRODUCT_SHIPPING_API_LEVEL := 36
 # without it soong fails with "module ... already defined". The retrofit flag therefore lives in
 # BoardConfig.mk, which is read after config.mk's guard.
 
-# ART
-PRODUCT_ENABLE_UFFD_GC := true
-
 # Adreno
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.opengles.aep.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.opengles.aep.xml \
