@@ -69,7 +69,22 @@ service vendor.charge-default-poweroff /vendor/bin/hw/vendor.noth.hardware.charg
     group system
     disabled
 
+# Inbound SMS is buffered in the modem while qcril's poweron optimisation is on:
+# delivery waits on atel_ui_status, which only the QTI OEM hook raises and nothing
+# on LineageOS calls. The flag sits in qcril_properties_table of the /data copy of
+# the qcril database, and the vendor template does not reach a device that already
+# has one, so the file is restored from the template (which carries 0) and qcril is
+# restarted on top of it -- the copy does not hold while qcril is running.
 on property:sys.boot_completed=1
+    stop vendor.qcrild
+    stop vendor.qcrild2
+    stop vendor.qcrild3
+    copy /vendor/etc/qcril_database/qcrilNr.db /data/vendor/radio/qcrilNr.db
+    chown radio radio /data/vendor/radio/qcrilNr.db
+    chmod 0600 /data/vendor/radio/qcrilNr.db
+    restorecon /data/vendor/radio/qcrilNr.db
+    start vendor.qcrild
+    start vendor.qcrild2
  # Enable PowerHAL hint processing
     setprop vendor.powerhal.init 1
 
