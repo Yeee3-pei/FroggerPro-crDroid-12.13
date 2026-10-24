@@ -16,6 +16,13 @@ type hal_fingerprint_aidl_service;
 type proc_vibrate;
 type proc_vibrator;
 type vendor_exported_finger_prop;
+
+# One property name, two consumers: vendor_init sets it from vendor.prop
+# (libqti-perfd-client.so) and the Goodix HAL reads it to find its extension library.
+# Deliberately NOT vendor_restricted_property_type -- that attribute is exactly what limited
+# the setters to hal_fingerprint_default and silently dropped the value (the denial was
+# avc denied { set } for ro.vendor.extension_library, scontext vendor_init).
+type vendor_extension_library_prop, property_type, vendor_property_type;
 type vendor_goodix_als_ps_data_file;
 type vendor_goodix_gf_data_file;
 type vendor_persist_haptic_file;
@@ -172,6 +179,10 @@ allow hal_fingerprint_default vendor_exported_finger_prop:property_service { set
 allow hal_fingerprint_default vendor_exported_finger_prop:file { read getattr map open };
 allow system_app vendor_exported_finger_prop:file { read getattr map open };
 allow platform_app vendor_exported_finger_prop:file { read getattr map open };
+
+# ro.vendor.extension_library: vendor_init sets it from vendor.prop, the Goodix HAL reads it.
+allow vendor_init vendor_extension_library_prop:property_service set;
+get_prop(hal_fingerprint_default, vendor_extension_library_prop)
 allow hal_fingerprint_default vendor_data_file:dir { read write create open add_name remove_name };
 allow hal_fingerprint_default vendor_data_file:file { write create getattr unlink open };
 allow hal_fingerprint_default vendor_goodix_gf_data_file:dir { read write create open add_name remove_name };

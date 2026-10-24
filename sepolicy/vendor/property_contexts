@@ -14,7 +14,9 @@ persist.vendor.goodix.dump_data        u:object_r:vendor_exported_finger_prop:s0
 persist.vendor.noth.dump_data          u:object_r:vendor_exported_finger_prop:s0
 # The Goodix HAL (libgf_hal.so, loaded by fingerprint.default.so in the hal_fingerprint_default
 # domain) reads this property; unlabelled it falls to default_prop, which that domain cannot read.
-ro.vendor.extension_library            u:object_r:vendor_exported_finger_prop:s0
+# It is also set by vendor_init from vendor.prop, so the label must not be the restricted
+# fingerprint type -- that limited the setters to hal_fingerprint_default and dropped the value.
+ro.vendor.extension_library            u:object_r:vendor_extension_library_prop:s0
 persist.vendor.overlay.fp_vendor       u:object_r:vendor_exported_finger_prop:s0
 persist.vendor.overlay.fp_serial       u:object_r:vendor_exported_finger_prop:s0
 ro.vendor.display.array.lux            u:object_r:vendor_display_prop:s0
