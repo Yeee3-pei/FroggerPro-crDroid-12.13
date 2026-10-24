@@ -235,8 +235,6 @@ vendor.usb.use_gadget_hal=1
 vendor.vibrator.device=/dev/aw86927_haptic
 
 # Virtual AB
-ro.virtual_ab.compression.threads=true
-ro.virtual_ab.merge_delay_seconds=180
 
 # Widevine
 vendor.wv.oemcrypto.debug.enable_external_display_check=false
@@ -382,12 +380,6 @@ ro.vendor.sensor.udlight_sensor.rect_info=797,859,46,110
 ro.vendor.sensor.udlight_sensor.type=1
 ro.vendor.sensor.udlight_sensor_support=true
 ro.vendor.vm.ssr.enable=false
-ro.virtual_ab.batch_writes=true
-ro.virtual_ab.compression.enabled=true
-ro.virtual_ab.compression.xor.enabled=true
-ro.virtual_ab.enabled=true
-ro.virtual_ab.io_uring.enabled=true
-ro.virtual_ab.userspace.snapshots.enabled=true
 vendor.pasr.activemode.enabled=false
 vendor.power.pasr.enabled=false
 # End of the ported block.
