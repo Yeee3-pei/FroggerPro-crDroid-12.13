@@ -17,6 +17,19 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/handheld_vendor.mk)
 $(call inherit-product, device/nothing/froggerPro/device.mk)
 $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 
+# microG's signature spoofing is upstream LineageOS behaviour (frameworks/base
+# ComputerEngine.isMicrogSigned) and is gated on isDebuggable(), which reads ro.debuggable.
+# vendor/lineage/config/common.mk ties that property to WITH_ADB_INSECURE through
+# PRODUCT_NOT_DEBUGGABLE_IN_USERDEBUG, so a build that keeps adb authentication lands at
+# ro.debuggable=0 and upstream's check can never pass. Clearing the variable here, after the
+# vendor/lineage inherit, takes the AOSP userdebug default instead; adb authentication is
+# untouched (ro.adb.secure stays 1).
+#
+# Cost: the debug-oriented userdebug_or_eng() SELinux conditionals apply again, and a shell
+# without root can read dmesg and use the debug tooling. That is the AOSP userdebug default,
+# which LineageOS narrows deliberately; this port trades it for working signature spoofing.
+PRODUCT_NOT_DEBUGGABLE_IN_USERDEBUG := false
+
 PRODUCT_BRAND := Nothing
 PRODUCT_DEVICE := FroggerPro
 PRODUCT_MANUFACTURER := Nothing
