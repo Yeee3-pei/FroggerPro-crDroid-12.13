@@ -593,3 +593,11 @@ DEVICE_MANIFEST_FILE += \
 # The full safe copy list, vintf excluded.
 -include vendor/nothing/FroggerPro/stock_full.mk
 # stock_vintf.mk is not included: its 24 fragments need a soong glob cache fix first.
+
+# stock_full.mk also ships etc/permissions/com.nothing.features_vnd.xml, from its own empty
+# copy under stock_files/, so it lands on this same destination and wins by coming first.
+# Nothing-SDK apps gate on the SystemFeature declared in here, and extra_vendor_fill.mk (which
+# has a matching rule for the tree copy) is deliberately not inherited, so the declaration has
+# to be re-stated after the include above rather than edited in place.
+PRODUCT_COPY_FILES += \
+    vendor/nothing/FroggerPro/etc/permissions/com.nothing.features_vnd.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/com.nothing.features_vnd.xml
