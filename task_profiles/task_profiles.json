@@ -1,0 +1,17 @@
+{
+  "Attributes": [],
+  "Profiles": [
+    {
+      "Name": "NtCamAlgoCapacity",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params": {
+            "Controller": "cpuset",
+            "Path": "ntcam-algo"
+          }
+        }
+      ]
+    }
+  ]
+}

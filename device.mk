@@ -555,6 +555,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Media profile override, installed by media.mk.
 -include device/nothing/froggerPro/media.mk
 
+# Vendor task profile overlay, installed by task_profiles.mk.
+-include device/nothing/froggerPro/task_profiles.mk
+
 # Vendor blobs this tree installs itself, installed by vendor_blobs.mk.
 -include device/nothing/froggerPro/vendor_blobs.mk
 
