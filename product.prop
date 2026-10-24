@@ -29,7 +29,6 @@ bluetooth.profile.opp.enabled=true
 bluetooth.profile.pbap.server.enabled=true
 
 # Camera 
-ro.camerax.extensions.enabled=true 
 
 # Radio
 masterclear.allow_retain_esim_profiles_after_fdr=true
