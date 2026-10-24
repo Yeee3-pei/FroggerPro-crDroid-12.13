@@ -37,7 +37,39 @@ lib_fixups: lib_fixups_user_type = {
     ): lib_fixup_vendor_suffix,
 }
 
+def disable_qcril_poweron_opt(ctx, file, file_path, *args, **kwargs):
+    """Keep inbound SMS flowing instead of buffering it in the modem.
+
+    qcril_sms_mt_sms_ind_hdlr gates MT SMS delivery on atel_ui_status, which only
+    the QTI OEM hook QCRIL_EVT_HOOK_SET_ATEL_UI_STATUS raises -- NothingOS calls it,
+    LineageOS does not, and while power optimisation is on the messages sit in the
+    modem. The flag is read from the DB by qcril_config_get(), not from the
+    identically named Android property: that one read 0 while the flag read 1, and
+    setting it to 0 also broke 10-digit dialling. VALUE overrides DEF_VAL, so both
+    are set.
+    """
+    import sqlite3
+
+    prop = 'persist.vendor.radio.poweron_opt'
+    con = sqlite3.connect(file_path)
+    try:
+        cur = con.execute(
+            'UPDATE qcril_properties_table SET def_val = ?, value = ? WHERE property = ?',
+            ('0', '0', prop))
+        if cur.rowcount != 1:
+            # Loud but not fatal: a schema change must not break everyone's build,
+            # and a silently skipped fixup costs inbound SMS without any sign until
+            # someone texts the phone.
+            print(f'{file}: expected 1 row for {prop}, updated {cur.rowcount}; '
+                  'the qcril property table changed, re-check this fixup.')
+        con.commit()
+    finally:
+        con.close()
+
+
 blob_fixups: blob_fixups_user_type = {
+    'vendor/etc/qcril_database/qcrilNr.db': blob_fixup()
+        .call(disable_qcril_poweron_opt, need_tmp_dir=False),
     (
         'vendor/bin/hw/android.hardware.security.keymint-service-spu-qti',
         'vendor/lib64/libspukeymint.so',
