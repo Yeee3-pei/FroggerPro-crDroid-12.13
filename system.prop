@@ -13,15 +13,13 @@
 # re-enumerated between the two until the framework overwrote the property.
 persist.logd.logpersistd=logcatd
 
-# Dalvik/ART heap sizes.
-#
-# The vendor init script (init/init.target.rc in the device tree, shipped in the vendor partition) only sets
-# dalvik.vm.heapgrowthlimit from "on property:vendor.display.lcd_density=560" or "=640". This device reports
-# 480, so neither rule fires, the growth limit stays unset, and ART falls back to its built-in 16 MB default.
-# system_server then dies with java.lang.OutOfMemoryError while starting ("Failed to allocate a 24 byte
-# allocation ... target footprint 16777216, growth limit 16777216"), zygote respawns it, and the device sits in
-# the boot animation forever. Declaring the heap values here removes the dependency on the density property;
-# 256m is the value the vendor script itself uses for the 560 profile.
+# Dalvik/ART heap values. The inherited phone-xhdpi-6144-dalvik-heap.mk sets all of
+# them with ?=, and the vendor side sets the growth limit again in /vendor/build.prop
+# and /vendor/etc/init/hw/init.target.rc -- its density-triggered rules only cover the
+# 560 and 640 profiles, and this device reports 480 and still ends at 256m. The first
+# three properties below therefore only restate what is already set; the last three
+# override it: heaptargetutilization 0.75 (inherited 0.5), heapminfree 512k
+# (inherited 8m), heapmaxfree 8m (inherited 32m).
 dalvik.vm.heapstartsize=16m
 dalvik.vm.heapgrowthlimit=256m
 dalvik.vm.heapsize=512m
