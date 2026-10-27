@@ -1,6 +1,6 @@
 # hardware/qcom-caf/sm8750/display/core/
 diff --git a/sdm/libs/core/Android.bp b/sdm/libs/core/Android.bp
-index e2187c7..74818d8 100644
+index e2187c7..7251b79 100644
 --- a/sdm/libs/core/Android.bp
 +++ b/sdm/libs/core/Android.bp
 @@ -1,9 +1,12 @@
@@ -10,12 +10,12 @@ index e2187c7..74818d8 100644
 -    sanitize: {
 -        integer_overflow: true,
 -    },
-+    // 2026-10-02：移除 integer_overflow sanitize
-+    //   原因：DispLayerStack::Clear() 的乘法溢位被 UBSan 攔截 -> abort -> composer SIGABRT
-+    //         -> SurfaceFlinger 被反覆 SIGKILL -> 黑屏開機迴圈（v8/v9/v10 皆同）
-+    //   證據：tombstone 堆疊 __ubsan_handle_mul_overflow_minimal_abort → DispLayerStack::Clear()
-+    //   對照：v7（能開機）用的 libsdmcore.so 與本樹 prebuilt 相同（md5 182620dfbe13…）
-+    //         而建置產物用的是本模組（md5 1f4b97627817…）-> 差異 589,971 位元組
++    // 2026-10-02: 移除 integer_overflow sanitize
++    //   原因: DispLayerStack::Clear() 的乘法溢位被 UBSan 攔截 -> abort -> composer SIGABRT
++    //         -> SurfaceFlinger 被反覆 SIGKILL -> 黑屏開機迴圈(v8/v9/v10 皆同)
++    //   證據: tombstone 堆疊 __ubsan_handle_mul_overflow_minimal_abort -> DispLayerStack::Clear()
++    //   對照: v7(能開機)用的 libsdmcore.so 與本樹 prebuilt 相同(md5 182620dfbe13…)
++    //         而建置產物用的是本模組(md5 1f4b97627817…)-> 差異 589,971 位元組
      vendor: true,
      header_libs: [
          "display_headers",

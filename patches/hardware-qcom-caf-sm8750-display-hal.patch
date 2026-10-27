@@ -57,7 +57,7 @@ index f6d5e3e5d6..730d4f368d 100644
  soong_config_module_type {
      name: "qticomposer3_cc_defaults",
 diff --git a/gralloc/Android.bp b/gralloc/Android.bp
-index c68a7caec5..7364c5c086 100644
+index c68a7caec5..1404e4e7cf 100644
 --- a/gralloc/Android.bp
 +++ b/gralloc/Android.bp
 @@ -342,62 +342,8 @@ cc_binary {
@@ -66,9 +66,9 @@ index c68a7caec5..7364c5c086 100644
      ],
 -    init_rc: ["vendor.qti.hardware.display.allocator-service.rc"],
 -    vintf_fragments: ["vendor.qti.hardware.display.allocator-service.xml"],
-+    // 2026-10-02 C182：這兩個檔改由 froggerpro_display_prebuilts 的 prebuilt 模組安裝
-+    // （prefer: true 取代本模組後，本模組的 install 步驟不會進安裝集 檔案會缺；
-+    //   若兩邊都宣告 -> kati 報 overriding commands -> 必須只留一邊）
++    // 2026-10-02 C182: 這兩個檔改由 froggerpro_display_prebuilts 的 prebuilt 模組安裝
++    // (prefer: true 取代本模組後, 本模組的 install 步驟不會進安裝集 檔案會缺; 
++    //   若兩邊都宣告 -> kati 報 overriding commands -> 必須只留一邊)
  }
  
 -cc_fuzz {
