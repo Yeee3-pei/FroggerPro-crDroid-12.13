@@ -13,4 +13,4 @@
 # temp/pm/gen_vendor_extra_mk.py after re-running temp/pm/vendor_missing_report.py.
 
 PRODUCT_COPY_FILES += \
-    vendor/nothing/froggerPro/etc/bpf/qmsUidStats.o:$(TARGET_COPY_OUT_VENDOR)/etc/bpf/qmsUidStats.o
+    vendor/nothing/froggerPro/proprietary/vendor/etc/bpf/qmsUidStats.o:$(TARGET_COPY_OUT_VENDOR)/proprietary/vendor/etc/bpf/qmsUidStats.o
