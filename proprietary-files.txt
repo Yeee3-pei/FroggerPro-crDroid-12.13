@@ -1962,6 +1962,62 @@ vendor/lib64/libmmfp.so
 vendor/lib64/libmpbase.so
 vendor/lib64/libnoteengine.so
 vendor/lib64/libnspextensionsuperresolutionservice.so
+# NSP (Nothing/Qualcomm camera service provider) framework. camera.qcom.so creates the CamX NCS
+# provider through these; without them FillCap() reports "No Provider Object with cameraId: 0"
+# and panorama/video fail. They are one dependency cluster, so all of them have to be present.
+vendor/lib64/libnspdependencyservice.so
+vendor/lib64/libnspdescriptorhandlerservice.so
+vendor/lib64/libnspdiagservice.so
+vendor/lib64/libnspextensionloaderservice.so
+vendor/lib64/libnspframework.so
+vendor/lib64/libnspframeworkcoreservice.so
+vendor/lib64/libnspframeworkcoreutilityservice.so
+vendor/lib64/libnspgraphingservice.so
+vendor/lib64/libnspipcservice.so
+vendor/lib64/libnsposalservice.so
+vendor/lib64/libnspresourceservice.so
+vendor/lib64/libnspschedulerservice.so
+vendor/lib64/libnspsessionservice.so
+vendor/lib64/libnsptransactionservice.so
+# Camera pieces the blobs directory already had but the list never carried. The ICP TrustZone
+# firmware matters most: camxncsintfqsee reports "Sensor 36 probe failed during boot" and
+# CamX then has no NCS provider (panorama/video, and Aperture's 360 mode, fail).
+vendor/bin/qvrcameratest
+vendor/etc/permissions/advancedSample_camera_extensions.xml
+vendor/etc/pwr/CameraPowerOptFeature.xml
+vendor/firmware/CAMERA_ICP_170.elf
+vendor/firmware/CAMERA_ICP_1.b00
+vendor/firmware/CAMERA_ICP_1.b01
+vendor/firmware/CAMERA_ICP_1.b02
+vendor/firmware/CAMERA_ICP_1.b03
+vendor/firmware/CAMERA_ICP_1.b04
+vendor/firmware/CAMERA_ICP_1.b05
+vendor/firmware/CAMERA_ICP_1.b06
+vendor/firmware/CAMERA_ICP_1.b07
+vendor/firmware/CAMERA_ICP_1.b08
+vendor/firmware/CAMERA_ICP_1.b09
+vendor/firmware/CAMERA_ICP_1.b10
+vendor/firmware/CAMERA_ICP_1.b11
+vendor/firmware/CAMERA_ICP_1.b12
+vendor/firmware/CAMERA_ICP_1.b13
+vendor/firmware/CAMERA_ICP_1.b14
+vendor/firmware/CAMERA_ICP_1.b15
+vendor/firmware/CAMERA_ICP_1.b16
+vendor/firmware/CAMERA_ICP_1.b17
+vendor/firmware/CAMERA_ICP_1.b18
+vendor/firmware/CAMERA_ICP_1.b19
+vendor/firmware/CAMERA_ICP_1.b20
+vendor/firmware/CAMERA_ICP_1.elf
+vendor/firmware/CAMERA_ICP_1.mbn
+vendor/firmware/CAMERA_ICP_1.mdt
+vendor/framework/androidx.camera.extensions.impl.advanced.jar
+vendor/framework/oat/arm64/androidx.camera.extensions.impl.advanced.odex
+vendor/framework/oat/arm64/androidx.camera.extensions.impl.advanced.vdex
+vendor/lib64/libcameradecision.so
+vendor/lib64/libcamerapoweroptfeature.so
+vendor/lib64/vendor.qti.hardware.camera.aon-V1-ndk.so
+vendor/lib64/vendor.qti.hardware.camera.offlinecamera-V1-ndk.so
+vendor/lib64/vendor.qti.hardware.qseecom@1.0.so
 vendor/lib64/libntofflinepostproc.so
 vendor/lib64/libofestriping.so
 vendor/lib64/libois_channel_stub.so
@@ -2019,3 +2075,19 @@ vendor/lib64/vendor.qti.hardware.cacertaidlservice-V1-ndk.so
 vendor/lib64/vendor.qti.hardware.power.powermodule-V1-ndk.so
 vendor/lib64/vendor.qti.hardware.qconfig-V1-ndk.so
 vendor/lib64/vendor.qti.syshealthmon-V1-ndk.so
+vendor/lib64/libcodec2_aidl_stockvnd.so
+vendor/lib64/libbluetooth_audio_session_aidl_stockvnd.so
+vendor/lib64/libaudioaidlcommon_stockvnd.so
+vendor/lib64/libaudioutils_stockvnd.so
+vendor/lib64/libmediautils_vendor_stockvnd.so
+vendor/lib64/libalsautilsv2_stockvnd.so
+vendor/lib64/libaudio_aidl_conversion_common_ndk_stockvnd.so
+vendor/lib64/libtinyalsav2_stockvnd.so
+vendor/lib64/libtinyxml2_qti.so
+vendor/lib64/libtensorflowlite_c_voicesdk.so
+vendor/etc/init/hw/init.nt_product.rc
+vendor/etc/init/hw/init.qcom.factory.rc
+vendor/etc/init/hw/init.qti.ufs.rc
+vendor/etc/recovery-resource.dat
+vendor/etc/vintf/manifest_sun.xml
+vendor/etc/vintf/manifest_tuna.xml

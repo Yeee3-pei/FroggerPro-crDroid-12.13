@@ -601,3 +601,8 @@ DEVICE_MANIFEST_FILE += \
 # to be re-stated after the include above rather than edited in place.
 PRODUCT_COPY_FILES += \
     vendor/nothing/FroggerPro/etc/permissions/com.nothing.features_vnd.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/com.nothing.features_vnd.xml
+
+# Camera V1 AIDL libs the stock vendor ships alongside V2.
+PRODUCT_PACKAGES += \
+    vendor.qti.hardware.camera.aon-V1-ndk \
+    vendor.qti.hardware.camera.offlinecamera-V1-ndk
