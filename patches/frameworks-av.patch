@@ -1,0 +1,81 @@
+# frameworks/av/
+diff --git a/media/libeffects/downmix/Android.bp b/media/libeffects/downmix/Android.bp
+index 19b80829f2..9be3f161cd 100644
+--- a/media/libeffects/downmix/Android.bp
++++ b/media/libeffects/downmix/Android.bp
+@@ -51,6 +51,9 @@ cc_library {
+ 
+ cc_library_shared {
+     name: "libdownmixaidl",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     srcs: [
+         ":effectCommonFile",
+         "aidl/DownmixContext.cpp",
+diff --git a/media/libeffects/dynamicsproc/Android.bp b/media/libeffects/dynamicsproc/Android.bp
+index 12477a49b8..f5ccd9cb62 100644
+--- a/media/libeffects/dynamicsproc/Android.bp
++++ b/media/libeffects/dynamicsproc/Android.bp
+@@ -78,6 +78,9 @@ cc_library_shared {
+ 
+ cc_library_shared {
+     name: "libdynamicsprocessingaidl",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+ 
+     srcs: [
+         ":effectCommonFile",
+diff --git a/media/libeffects/loudness/Android.bp b/media/libeffects/loudness/Android.bp
+index 775568ac66..c61cb06355 100644
+--- a/media/libeffects/loudness/Android.bp
++++ b/media/libeffects/loudness/Android.bp
+@@ -48,6 +48,9 @@ cc_library {
+ 
+ cc_library_shared {
+     name: "libloudnessenhanceraidl",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     srcs: [
+         ":effectCommonFile",
+         "aidl/EffectLoudnessEnhancer.cpp",
+diff --git a/media/libeffects/lvm/wrapper/Android.bp b/media/libeffects/lvm/wrapper/Android.bp
+index 5b4804556c..5a802cafd4 100644
+--- a/media/libeffects/lvm/wrapper/Android.bp
++++ b/media/libeffects/lvm/wrapper/Android.bp
+@@ -104,6 +104,9 @@ cc_library {
+ 
+ cc_library_shared {
+     name: "libbundleaidl",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     srcs: [
+         ":effectCommonFile",
+         "Aidl/BundleContext.cpp",
+@@ -136,6 +139,9 @@ cc_library_shared {
+ 
+ cc_library_shared {
+     name: "libreverbaidl",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     srcs: [
+         ":effectCommonFile",
+         "Reverb/aidl/EffectReverb.cpp",
+diff --git a/media/libeffects/visualizer/Android.bp b/media/libeffects/visualizer/Android.bp
+index 8f1d8da4e8..24ce4977d0 100644
+--- a/media/libeffects/visualizer/Android.bp
++++ b/media/libeffects/visualizer/Android.bp
+@@ -53,6 +53,9 @@ cc_library_shared {
+ 
+ cc_library_shared {
+     name: "libvisualizeraidl",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     srcs: [
+         ":effectCommonFile",
+         "aidl/Visualizer.cpp",

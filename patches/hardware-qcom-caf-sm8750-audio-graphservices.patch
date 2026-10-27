@@ -1,0 +1,77 @@
+# hardware/qcom-caf/sm8750/audio/graphservices/
+diff --git a/acdb/Android.bp b/acdb/Android.bp
+index 757bebd..3cdb890 100644
+--- a/acdb/Android.bp
++++ b/acdb/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libar-acdb",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
+@@ -43,6 +46,9 @@ cc_library_shared {
+ 
+ cc_library_shared {
+     name: "libats",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
+diff --git a/ar_osal/Android.bp b/ar_osal/Android.bp
+index 656aafe..dea248a 100644
+--- a/ar_osal/Android.bp
++++ b/ar_osal/Android.bp
+@@ -6,6 +6,9 @@ cc_library_headers {
+ 
+ cc_library_shared {
+     name: "liblx-osal",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
+diff --git a/ar_util/Android.bp b/ar_util/Android.bp
+index cc878c7..8194e01 100644
+--- a/ar_util/Android.bp
++++ b/ar_util/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "liblx-ar_util",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
+diff --git a/gpr/Android.bp b/gpr/Android.bp
+index 7531b09..f151260 100644
+--- a/gpr/Android.bp
++++ b/gpr/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libar-gpr",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
+diff --git a/gsl/Android.bp b/gsl/Android.bp
+index baa484f..7982535 100644
+--- a/gsl/Android.bp
++++ b/gsl/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libar-gsl",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 

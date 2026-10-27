@@ -1,0 +1,96 @@
+# system/sepolicy/
+diff --git a/private/compat/202404/202404.ignore.cil b/private/compat/202404/202404.ignore.cil
+index 69e7d5e8b..954e7fdd5 100644
+--- a/private/compat/202404/202404.ignore.cil
++++ b/private/compat/202404/202404.ignore.cil
+@@ -41,4 +41,6 @@
+     virtualizationmanager_exec
+     wifi_mainline_supplicant_service
+     wifi_usd_service
++    hal_matrix_leds
++    hal_matrix_leds_service
+   ))
+diff --git a/private/compat/202504/202504.ignore.cil b/private/compat/202504/202504.ignore.cil
+index 8cd51e411..d4d4548dc 100644
+--- a/private/compat/202504/202504.ignore.cil
++++ b/private/compat/202504/202504.ignore.cil
+@@ -30,4 +30,6 @@
+     wallet_prop
+     anomaly_detector_service
+     uprobestats_service
++    hal_matrix_leds
++    hal_matrix_leds_service
+   ))
+diff --git a/private/compat/29.0/29.0.ignore.cil b/private/compat/29.0/29.0.ignore.cil
+index e40888dcc..09ea5e72a 100644
+--- a/private/compat/29.0/29.0.ignore.cil
++++ b/private/compat/29.0/29.0.ignore.cil
+@@ -127,4 +127,8 @@
+     vendor_service_contexts_file
+     vendor_socket_hook_prop
+     vendor_socket_hook_prop
+-    virtual_ab_prop))
++    virtual_ab_prop
++    hal_matrix_leds
++    hal_matrix_leds_service
++    zygote_config_prop
++))
+\ No newline at end of file
+diff --git a/private/compat/30.0/30.0.ignore.cil b/private/compat/30.0/30.0.ignore.cil
+index 1d3b3892f..b149e1832 100644
+--- a/private/compat/30.0/30.0.ignore.cil
++++ b/private/compat/30.0/30.0.ignore.cil
+@@ -156,4 +156,7 @@
+     vpn_management_service
+     watchdog_metadata_file
+     wifi_key
+-    zygote_config_prop))
++    hal_matrix_leds
++    hal_matrix_leds_service
++    zygote_config_prop
++))
+\ No newline at end of file
+diff --git a/private/compat/31.0/31.0.ignore.cil b/private/compat/31.0/31.0.ignore.cil
+index 0e39f3ec3..18bf980b9 100644
+--- a/private/compat/31.0/31.0.ignore.cil
++++ b/private/compat/31.0/31.0.ignore.cil
+@@ -49,4 +49,6 @@
+     vendor_vm_file
+     vendor_vm_data_file
+     virtual_device_service
++    hal_matrix_leds
++    hal_matrix_leds_service
+   ))
+diff --git a/private/compat/32.0/32.0.ignore.cil b/private/compat/32.0/32.0.ignore.cil
+index dd74cd82f..7c80738a5 100644
+--- a/private/compat/32.0/32.0.ignore.cil
++++ b/private/compat/32.0/32.0.ignore.cil
+@@ -83,4 +83,6 @@
+     vendor_vm_file
+     virtual_device_service
+     wallpaper_effects_generation_service
++    hal_matrix_leds
++    hal_matrix_leds_service
+ ))
+diff --git a/private/compat/33.0/33.0.ignore.cil b/private/compat/33.0/33.0.ignore.cil
+index f041d97b6..cd9141d2a 100644
+--- a/private/compat/33.0/33.0.ignore.cil
++++ b/private/compat/33.0/33.0.ignore.cil
+@@ -92,4 +92,6 @@
+     zoned_block_device
+     future_pm_prop
+     vfio_device
++    hal_matrix_leds
++    hal_matrix_leds_service
+   ))
+diff --git a/private/compat/34.0/34.0.ignore.cil b/private/compat/34.0/34.0.ignore.cil
+index 46210f691..940959a78 100644
+--- a/private/compat/34.0/34.0.ignore.cil
++++ b/private/compat/34.0/34.0.ignore.cil
+@@ -53,4 +53,6 @@
+     enable_16k_pages_prop
+     proc_cgroups
+     media_quality_service
++    hal_matrix_leds
++    hal_matrix_leds_service
+   ))

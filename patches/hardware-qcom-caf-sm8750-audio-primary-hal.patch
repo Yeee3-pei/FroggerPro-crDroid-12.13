@@ -1,0 +1,890 @@
+# hardware/qcom-caf/sm8750/audio/primary-hal/
+diff --git a/configs/kalama/audio_module_config_primary.xml b/configs/kalama/audio_module_config_primary.xml
+index 04d45e378..c9c6c1538 100644
+--- a/configs/kalama/audio_module_config_primary.xml
++++ b/configs/kalama/audio_module_config_primary.xml
+@@ -1,35 +1,25 @@
+ <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ <!--
+-Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
++Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ SPDX-License-Identifier: BSD-3-Clause-Clear
+ -->
+ <modules>
+ <module name="default">
+-    <!-- Global configuration Decalaration -->
+-    <globalConfiguration speaker_drc_enabled="true" supportedAudioModes="NORMAL RINGTONE IN_CALL IN_COMMUNICATION CALL_SCREEN"/>
+-    <attachedDevices>
+-        <item>earpiece</item>
+-        <item>speaker</item>
+-        <item>telephony_tx_device_out</item>
+-        <item>built_in_mic</item>
+-        <item>built_in_back_mic</item>
+-        <item>fm_tuner_mic</item>
+-        <item>telephony_rx_mic</item>
+-        <item>echo_reference_mic</item>
+-    </attachedDevices>
+-    <defaultOutputDevice>speaker</defaultOutputDevice>
+     <mixPorts>
+         <!-- based on role, mixport flags are identified as either input flags or
+         output flags-->
+-
+         <!-- start of source mixports-->
+-        <mixPort name="primary_out" role="source" flags="FAST PRIMARY">
++        <mixPort name="low_latency_out" role="source" flags="FAST PRIMARY" maxOpenCount="2" maxActiveCount="2">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
++
++        <!--  heaton.zhong, 2023/02/10,Remove for disable ULL output
+         <mixPort name="raw_out" role="source" flags="FAST RAW">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="haptics_out" role="source">
++        end by heaton.zhong, 2023/02/10 -->
++
++        <mixPort name="haptics_out" role="source" flags="FAST">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO_HAPTIC_A" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+         <mixPort name="deep_buffer_out" role="source" flags="DEEP_BUFFER">
+@@ -44,17 +34,19 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_24_BIT" />
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_32_BIT" />
+         </mixPort>
+-        <mixPort name="hifi_out" role="source" />
++        <mixPort name="hifi_playback" role="source">
++        </mixPort>
+         <mixPort name="spatial_out" role="source" flags="SPATIALIZER">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="direct_pcm_out" role="source" flags="DIRECT">
++        <mixPort name="direct_pcm_out" role="source" flags="DIRECT" recommendedMuteDurationMs="160">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_16_BIT" />
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="FIXED_Q_8_24" />
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_24_BIT" />
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_32_BIT" />
++            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="FIXED_Q_8_24" />
++            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_24_BIT" />
++            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_32_BIT" />
++            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="FLOAT_32_BIT" />
+         </mixPort>
+-        <mixPort name="compress_offload_out" role="source" recommendedMuteDurationMs="190" flags="DIRECT COMPRESS_OFFLOAD NON_BLOCKING GAPLESS_OFFLOAD">
++        <mixPort name="compress_offload_out" role="source" flags="DIRECT COMPRESS_OFFLOAD NON_BLOCKING GAPLESS_OFFLOAD">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/mpeg" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/flac" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="NON_PCM" encoding="audio/alac" />
+@@ -62,61 +54,54 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/mp4a.40.02" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/mp4a.40.05" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/mp4a.40.29" />
+-            <profile samplingRates="32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1" formatType="NON_PCM" encoding="audio/vnd.dts" />
+-            <profile samplingRates="32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="NON_PCM" encoding="audio/vnd.dts.hd" />
++            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/vorbis" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="NON_PCM" encoding="audio/x-ms-wma" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="NON_PCM" encoding="audio/x-ms-wma.pro" />
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/vorbis" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/aac-adts.02" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/aac-adts.05" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/aac-adts.29" />
++            <profile samplingRates="8000 12000 16000 24000 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/opus" />
+         </mixPort>
+-        <mixPort name="voice_tx_source" role="source">
+-            <profile samplingRates="8000 16000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++
++        <mixPort name="voice_tx" role="source">
++            <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="voip_rx_source" role="source" flags="DIRECT VOIP_RX">
+-            <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
++        <mixPort name="voip_playback" role="source" flags="VOIP_RX">
++            <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="incall_music_uplink" role="source" flags="INCALL_MUSIC">
+-            <profile samplingRates="8000 16000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        <mixPort name="in_call_music" role="source" flags="INCALL_MUSIC">
++            <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
++
+         <!-- end of source mixports-->
+ 
+         <!-- start of sink mixports-->
+         <mixPort name="primary_in" role="sink" maxOpenCount="2" maxActiveCount="2">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="compress_in" role="sink" flags="DIRECT">
+-            <profile name="compress-capture-AAC-LC" samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO LAYOUT_FRONT_BACK" formatType="NON_PCM" encoding="audio/mp4a.40.02" />
+-        </mixPort>
+-        <mixPort name="fast_in" role="sink" flags="FAST">
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_16_BIT" />
++        <mixPort name="fast_input" role="sink" flags="FAST">
++            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_2POINT0POINT2 LAYOUT_3POINT0POINT2 LAYOUT_5POINT1" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="quad_mic_in" role="sink">
+-            <profile samplingRates="48000" channelLayouts="LAYOUT_3POINT1 LAYOUT_2POINT0POINT2" channelMasks="INDEX_MASK_4" formatType="PCM" pcmType="INT_16_BIT" />
++        <mixPort name="voip_record" role="sink" flags="VOIP_TX">
++            <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO"
++                formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="voip_tx_sink" role="sink" flags="VOIP_TX">
+-            <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
+-        </mixPort>
+-        <mixPort name="usb_surround_sound_in" role="sink">
++        <mixPort name="usb_surround_sound_input" role="sink">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 88200 96000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK LAYOUT_5POINT1" channelMasks="INDEX_MASK_3 INDEX_MASK_4 INDEX_MASK_6 INDEX_MASK_8" formatType="PCM" pcmType="INT_16_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 88200 96000 176400 192000" channelLayouts="LAYOUT_5POINT1" channelMasks="INDEX_MASK_6 INDEX_MASK_8" formatType="PCM" pcmType="INT_32_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 88200 96000 176400 192000" channelLayouts="LAYOUT_5POINT1" channelMasks="INDEX_MASK_6 INDEX_MASK_8" formatType="PCM" pcmType="FLOAT_32_BIT" />
+         </mixPort>
+-        <mixPort name="record_24_in" role="sink" maxOpenCount="2" maxActiveCount="2">
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 96000 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" channelMasks="INDEX_MASK_3 INDEX_MASK_4" formatType="PCM" pcmType="INT_24_BIT" />
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 96000 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" channelMasks="INDEX_MASK_3 INDEX_MASK_4" formatType="PCM" pcmType="FIXED_Q_8_24" />
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 96000 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" channelMasks="INDEX_MASK_3 INDEX_MASK_4" formatType="PCM" pcmType="FLOAT_32_BIT" />
+-        </mixPort>
+-        <mixPort name="voice_rx_sink" role="sink">
++        <mixPort name="voice_rx" role="sink">
+             <profile samplingRates="8000 16000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="mmap_no_irq_in" role="sink" flags="MMAP_NOIRQ">
++        <mixPort name="mmap_no_irq_in" role="sink" maxOpenCount="1" maxActiveCount="1" flags="MMAP_NOIRQ">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_24_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="FIXED_Q_8_24" />
+         </mixPort>
+-        <mixPort name="hifi_in" role="sink" />
++        <mixPort name="hotword_input" role="sink" flags="HW_HOTWORD">
++            <profile samplingRates="16000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        </mixPort>
+         <!-- end of sink mixports-->
+     </mixPorts>
+     <devicePorts>
+@@ -124,7 +109,7 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="earpiece" role="sink" attached="true" deviceType="OUT_SPEAKER_EARPIECE">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="speaker" role="sink" attached="true" deviceType="OUT_SPEAKER">
++        <devicePort tagName="speaker" role="sink" attached="true" defaultDevice="true" deviceType="OUT_SPEAKER">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="wired_headset" deviceType="OUT_HEADSET" role="sink" connection="analog">
+@@ -133,7 +118,7 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="wired_headphones" deviceType="OUT_HEADPHONE" role="sink" connection="analog">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="line_device_out" deviceType="OUT_DEVICE" role="sink" attached="true" connection="analog">
++        <devicePort tagName="line_out" deviceType="OUT_DEVICE" role="sink" connection="analog">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="bt_sco_out" deviceType="OUT_DEVICE" connection="bt-sco" role="sink">
+@@ -145,18 +130,22 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="bt_sco_car_kit" deviceType="OUT_CARKIT" connection="bt-sco" role="sink">
+             <profile samplingRates="8000 16000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="telephony_tx_device_out" deviceType="OUT_TELEPHONY_TX" role="sink" attached="true">
++        <devicePort tagName="telephony_tx" deviceType="OUT_TELEPHONY_TX" role="sink" attached="true">
+             <profile samplingRates="8000 16000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <!-- Todo check the sanity of below later w.r.t channel layouts -->
+-        <devicePort tagName="hdmi_device_out" deviceType="OUT_DEVICE" connection="hdmi" role="sink">
++        <devicePort tagName="hdmi_out" deviceType="OUT_DEVICE" connection="hdmi" role="sink">
+             <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <!-- Todo check the sanity of below later w.r.t channel layouts -->
+-        <devicePort tagName="proxy_device_out" deviceType="OUT_AFE_PROXY" role="sink" attached="true">
++        <devicePort tagName="proxy_out" deviceType="OUT_AFE_PROXY" connection="virtual" role="sink">
+             <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="fm_device_out" deviceType="OUT_FM" role="sink" attached="true">
++        <!-- OUT_DEVICE(ip-v4): Usage are not as per android expectation. Due to minimal use of device in regular use case, it is getting used for proxy device in playback usecase -->
++        <devicePort tagName="ip_out" deviceType="OUT_DEVICE" connection="ip-v4" role="sink">
++            <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        </devicePort>
++        <devicePort tagName="fm_out" deviceType="OUT_FM" role="sink" attached="true">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="bt_a2dp_out" deviceType="OUT_DEVICE" connection="bt-a2dp" role="sink" encodings="audio/x-sbc audio/mp4a.40 audio/aptx audio/vnd.qcom.aptx.hd audio/vnd.sony.ldac audio/x-celt audio/vnd.qcom.aptx.adaptive audio/vnd.qcom.aptx.twsp audio/x-lc3">
+@@ -168,10 +157,10 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="bt_a2dp_speaker" deviceType="OUT_SPEAKER" connection="bt-a2dp" role="sink" encodings="audio/x-sbc audio/mp4a.40 audio/aptx audio/vnd.qcom.aptx.hd audio/vnd.sony.ldac audio/x-celt audio/vnd.qcom.aptx.adaptive audio/vnd.qcom.aptx.twsp audio/x-lc3">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="bt_ble_headset" deviceType="OUT_HEADSET" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3">
++        <devicePort tagName="bt_ble_headset" deviceType="OUT_HEADSET" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3 audio/vnd.qcom.aptx.adaptive.r4">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="bt_ble_speaker" deviceType="OUT_SPEAKER" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3">
++        <devicePort tagName="bt_ble_speaker" deviceType="OUT_SPEAKER" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3 audio/vnd.qcom.aptx.adaptive.r4">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="bt_ble_broadcast" deviceType="OUT_BROADCAST" connection="bt-le" role="sink" encodings="audio/x-lc3">
+@@ -186,12 +175,15 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <!-- end of sink DEVICE PORT -->
+ 
+         <!-- start of source DEVICE PORT -->
+-        <devicePort tagName="built_in_mic" deviceType="IN_MICROPHONE" role="source" attached="true">
++        <devicePort tagName="built_in_mic" deviceType="IN_MICROPHONE" role="source" attached="true" defaultDevice="true" address="bottom">
++            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_24_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_16_BIT" />
+             <!-- To support compress offload capture such that client can query -->
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="NON_PCM" encoding="audio/mp4a.40.02" />
++            <profile samplingRates="24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO LAYOUT_FRONT_BACK" formatType="NON_PCM" encoding="audio/aac-adts.05" />
++            <profile samplingRates="24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO" formatType="NON_PCM" encoding="audio/aac-adts.29" />
+         </devicePort>
+-        <devicePort tagName="built_in_back_mic" deviceType="IN_MICROPHONE_BACK" role="source" attached="true">
++        <devicePort tagName="built_in_back_mic" deviceType="IN_MICROPHONE_BACK" role="source" attached="true" address="back">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="fm_tuner_mic" deviceType="IN_FM_TUNER" role="source" attached="true">
+@@ -200,19 +192,22 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="wired_headset_mic" deviceType="IN_HEADSET" connection="analog" role="source">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
++        <devicePort tagName="proxy_input_device" deviceType="IN_AFE_PROXY" connection="virtual" role="source">
++            <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        </devicePort>
++        <!-- IN_DEVICE(ip-v4): Usage are not as per android expectation. Due to minimal use of device in regular use case, it is getting used for proxy device in record usecase -->
++        <devicePort tagName="ip_input_device" deviceType="IN_DEVICE" connection="ip-v4" role="source">
++            <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        </devicePort>
+         <devicePort tagName="bt_sco_headset_mic" deviceType="IN_HEADSET" connection="bt-sco" role="source">
+             <profile samplingRates="8000 16000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="telephony_rx_mic" deviceType="IN_TELEPHONY_RX" role="source" attached="true">
++        <devicePort tagName="telephony_rx" deviceType="IN_TELEPHONY_RX" role="source" attached="true">
+             <profile samplingRates="8000 16000 48000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <!-- Todo check the sanity of the below device port profile -->
+         <devicePort tagName="usb_mic" deviceType="IN_DEVICE" connection="usb" role="source" >
+-            <profile samplingRates="48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <!-- Todo check the sanity of the below device port profile -->
+         <devicePort tagName="usb_headset_mic" deviceType="IN_HEADSET" connection="usb" role="source" >
+-            <profile samplingRates="48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="bt_a2dp_mic" deviceType="IN_DEVICE" connection="bt-a2dp" role="source" encodings="audio/x-lc3">
+             <profile samplingRates="44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+@@ -226,36 +221,45 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <!-- end of source DEVICE PORT -->
+     </devicePorts>
+     <routes>
+-        <route type="mix" sink="earpiece" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="speaker" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="wired_headset" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="wired_headphones" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="line_device_out" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="hdmi_device_out" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,haptics_out" />
+-        <route type="mix" sink="proxy_device_out" sources="primary_out,deep_buffer_out,direct_pcm_out,compress_offload_out,haptics_out" />
+-        <route type="mix" sink="fm_device_out" sources="primary_out" />
+-        <route type="mix" sink="bt_sco_out" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_sco_headset" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_ble_headset" sources="primary_out,raw_out,mmap_no_irq_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_sco_car_kit" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,haptics_out,spatial_out" />
+-        <route type="mix" sink="usb_device_out" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,hifi_out,haptics_out" />
+-        <route type="mix" sink="usb_headset" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,hifi_out,haptics_out" />
+-        <route type="mix" sink="telephony_tx_device_out" sources="voice_tx_source,incall_music_uplink" />
+-        <route type="mix" sink="voice_rx_sink" sources="telephony_rx_mic" />
+-        <route type="mix" sink="primary_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,fm_tuner_mic,telephony_rx_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic" />
+-        <route type="mix" sink="compress_in" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,wired_headset_mic,usb_mic,usb_headset_mic,bt_le_mic" />
+-        <route type="mix" sink="usb_surround_sound_in" sources="usb_mic,usb_headset_mic" />
+-        <route type="mix" sink="fast_in" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic" />
+-        <route type="mix" sink="quad_mic_in" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic" />
+-        <route type="mix" sink="voip_tx_sink" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,bt_le_mic" />
+-        <route type="mix" sink="record_24_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_a2dp_mic,bt_le_mic" />
++        <route type="mix" sink="earpiece" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++
++        <route type="mix" sink="wired_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
++        <route type="mix" sink="wired_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
++
++        <route type="mix" sink="usb_device_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
++        <route type="mix" sink="usb_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx,spatial_out" />
++
++        <route type="mix" sink="bt_sco_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_car_kit" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++
++        <route type="mix" sink="bt_a2dp_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out" />
++
++        <route type="mix" sink="bt_ble_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="bt_ble_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx,mmap_no_irq_out" />
++        <route type="mix" sink="bt_ble_broadcast" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out" />
++
++        <route type="mix" sink="line_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++
++        <route type="mix" sink="hdmi_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out" />
++
++        <route type="mix" sink="proxy_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,haptics_out" />
++
++        <route type="mix" sink="ip_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,haptics_out" />
++
++        <route type="mix" sink="fm_out" sources="low_latency_out" />
++        <!-- input routes -->
++        <route type="mix" sink="primary_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,fm_tuner_mic,telephony_rx,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device,ip_input_device" />
++        <route type="mix" sink="fast_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device,ip_input_device" />
++        <route type="mix" sink="telephony_tx" sources="voice_tx,in_call_music,built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,usb_mic,usb_headset_mic" />
+         <route type="mix" sink="mmap_no_irq_in" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic" />
+-        <route type="mix" sink="bt_a2dp_out" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_a2dp_headphones" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_a2dp_speaker" sources="primary_out,raw_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="bt_ble_speaker" sources="primary_out,raw_out,mmap_no_irq_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_rx_source,haptics_out" />
+-        <route type="mix" sink="bt_ble_broadcast" sources="primary_out,deep_buffer_out,direct_pcm_out,compress_offload_out" />
+-        <route type="mix" sink="hifi_in" sources="usb_mic,usb_headset_mic" />
++        <route type="mix" sink="voip_record" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,ip_input_device" />
++        <route type="mix" sink="hotword_input" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device" />
++        <route type="mix" sink="usb_surround_sound_input" sources="usb_mic,usb_headset_mic" />
++        <route type="mix" sink="voice_rx" sources="telephony_rx" />
+     </routes>
+ </module>
+ </modules>
+diff --git a/configs/parrot/audio_module_config_primary.xml b/configs/parrot/audio_module_config_primary.xml
+index 5b072639d..c9c6c1538 100644
+--- a/configs/parrot/audio_module_config_primary.xml
++++ b/configs/parrot/audio_module_config_primary.xml
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ <!--
+-Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
++Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ SPDX-License-Identifier: BSD-3-Clause-Clear
+ -->
+ <modules>
+@@ -12,10 +12,14 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <mixPort name="low_latency_out" role="source" flags="FAST PRIMARY" maxOpenCount="2" maxActiveCount="2">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
++
++        <!--  heaton.zhong, 2023/02/10,Remove for disable ULL output
+         <mixPort name="raw_out" role="source" flags="FAST RAW">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="haptics_out" role="source">
++        end by heaton.zhong, 2023/02/10 -->
++
++        <mixPort name="haptics_out" role="source" flags="FAST">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO_HAPTIC_A" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+         <mixPort name="deep_buffer_out" role="source" flags="DEEP_BUFFER">
+@@ -32,6 +36,9 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         </mixPort>
+         <mixPort name="hifi_playback" role="source">
+         </mixPort>
++        <mixPort name="spatial_out" role="source" flags="SPATIALIZER">
++            <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        </mixPort>
+         <mixPort name="direct_pcm_out" role="source" flags="DIRECT" recommendedMuteDurationMs="160">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_16_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="FIXED_Q_8_24" />
+@@ -39,7 +46,7 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_32_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="FLOAT_32_BIT" />
+         </mixPort>
+-        <mixPort name="compress_offload_out" role="source" recommendedMuteDurationMs="190" flags="DIRECT COMPRESS_OFFLOAD NON_BLOCKING GAPLESS_OFFLOAD">
++        <mixPort name="compress_offload_out" role="source" flags="DIRECT COMPRESS_OFFLOAD NON_BLOCKING GAPLESS_OFFLOAD">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/mpeg" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/flac" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="NON_PCM" encoding="audio/alac" />
+@@ -75,9 +82,6 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <mixPort name="fast_input" role="sink" flags="FAST">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_2POINT0POINT2 LAYOUT_3POINT0POINT2 LAYOUT_5POINT1" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="fast_raw_input" role="sink" flags="FAST RAW">
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_2POINT0POINT2 LAYOUT_3POINT0POINT2 LAYOUT_5POINT1" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+-        </mixPort>
+         <mixPort name="voip_record" role="sink" flags="VOIP_TX">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO"
+                 formatType="PCM" pcmType="INT_16_BIT" />
+@@ -137,6 +141,10 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="proxy_out" deviceType="OUT_AFE_PROXY" connection="virtual" role="sink">
+             <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
++        <!-- OUT_DEVICE(ip-v4): Usage are not as per android expectation. Due to minimal use of device in regular use case, it is getting used for proxy device in playback usecase -->
++        <devicePort tagName="ip_out" deviceType="OUT_DEVICE" connection="ip-v4" role="sink">
++            <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        </devicePort>
+         <devicePort tagName="fm_out" deviceType="OUT_FM" role="sink" attached="true">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+@@ -149,10 +157,10 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="bt_a2dp_speaker" deviceType="OUT_SPEAKER" connection="bt-a2dp" role="sink" encodings="audio/x-sbc audio/mp4a.40 audio/aptx audio/vnd.qcom.aptx.hd audio/vnd.sony.ldac audio/x-celt audio/vnd.qcom.aptx.adaptive audio/vnd.qcom.aptx.twsp audio/x-lc3">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="bt_ble_headset" deviceType="OUT_HEADSET" connection="bt-le" role="sink" encodings="audio/x-lc3">
++        <devicePort tagName="bt_ble_headset" deviceType="OUT_HEADSET" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3 audio/vnd.qcom.aptx.adaptive.r4">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="bt_ble_speaker" deviceType="OUT_SPEAKER" connection="bt-le" role="sink" encodings="audio/x-lc3">
++        <devicePort tagName="bt_ble_speaker" deviceType="OUT_SPEAKER" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3 audio/vnd.qcom.aptx.adaptive.r4">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="bt_ble_broadcast" deviceType="OUT_BROADCAST" connection="bt-le" role="sink" encodings="audio/x-lc3">
+@@ -187,6 +195,10 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="proxy_input_device" deviceType="IN_AFE_PROXY" connection="virtual" role="source">
+             <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
++        <!-- IN_DEVICE(ip-v4): Usage are not as per android expectation. Due to minimal use of device in regular use case, it is getting used for proxy device in record usecase -->
++        <devicePort tagName="ip_input_device" deviceType="IN_DEVICE" connection="ip-v4" role="source">
++            <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
++        </devicePort>
+         <devicePort tagName="bt_sco_headset_mic" deviceType="IN_HEADSET" connection="bt-sco" role="source">
+             <profile samplingRates="8000 16000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+@@ -209,42 +221,42 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <!-- end of source DEVICE PORT -->
+     </devicePorts>
+     <routes>
+-        <route type="mix" sink="earpiece" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="earpiece" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
+ 
+-        <route type="mix" sink="wired_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="wired_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="wired_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
++        <route type="mix" sink="wired_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
+ 
+-        <route type="mix" sink="usb_device_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
+-        <route type="mix" sink="usb_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
++        <route type="mix" sink="usb_device_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
++        <route type="mix" sink="usb_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx,spatial_out" />
+ 
+-        <route type="mix" sink="bt_sco_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="bt_sco_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="bt_sco_car_kit" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_car_kit" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
+ 
+-        <route type="mix" sink="bt_a2dp_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="bt_a2dp_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out" />
+-        <route type="mix" sink="bt_a2dp_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out" />
++        <route type="mix" sink="bt_a2dp_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out" />
+ 
+-        <route type="mix" sink="bt_ble_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="bt_ble_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx,mmap_no_irq_out" />
++        <route type="mix" sink="bt_ble_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="bt_ble_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx,mmap_no_irq_out" />
+         <route type="mix" sink="bt_ble_broadcast" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out" />
+ 
+-        <route type="mix" sink="line_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out" />
++        <route type="mix" sink="line_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
+ 
+-        <route type="mix" sink="hdmi_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out" />
++        <route type="mix" sink="hdmi_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out" />
+ 
+         <route type="mix" sink="proxy_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,haptics_out" />
+ 
++        <route type="mix" sink="ip_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,haptics_out" />
++
+         <route type="mix" sink="fm_out" sources="low_latency_out" />
+         <!-- input routes -->
+-        <route type="mix" sink="primary_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,fm_tuner_mic,telephony_rx,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device" />
+-        <route type="mix" sink="fast_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device" />
+-        <route type="mix" sink="fast_raw_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device" />
+-        <route type="mix" sink="compress_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device" />
++        <route type="mix" sink="primary_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,fm_tuner_mic,telephony_rx,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device,ip_input_device" />
++        <route type="mix" sink="fast_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device,ip_input_device" />
+         <route type="mix" sink="telephony_tx" sources="voice_tx,in_call_music,built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,usb_mic,usb_headset_mic" />
+         <route type="mix" sink="mmap_no_irq_in" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic" />
+-        <route type="mix" sink="voip_record" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic" />
++        <route type="mix" sink="voip_record" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,ip_input_device" />
+         <route type="mix" sink="hotword_input" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device" />
+         <route type="mix" sink="usb_surround_sound_input" sources="usb_mic,usb_headset_mic" />
+         <route type="mix" sink="voice_rx" sources="telephony_rx" />
+diff --git a/configs/pineapple/audio_module_config_primary.xml b/configs/pineapple/audio_module_config_primary.xml
+index 48024b90d..c9c6c1538 100644
+--- a/configs/pineapple/audio_module_config_primary.xml
++++ b/configs/pineapple/audio_module_config_primary.xml
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ <!--
+-Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
++Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ SPDX-License-Identifier: BSD-3-Clause-Clear
+ -->
+ <modules>
+@@ -12,10 +12,14 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <mixPort name="low_latency_out" role="source" flags="FAST PRIMARY" maxOpenCount="2" maxActiveCount="2">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
++
++        <!--  heaton.zhong, 2023/02/10,Remove for disable ULL output
+         <mixPort name="raw_out" role="source" flags="FAST RAW">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="haptics_out" role="source">
++        end by heaton.zhong, 2023/02/10 -->
++
++        <mixPort name="haptics_out" role="source" flags="FAST">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO_HAPTIC_A" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+         <mixPort name="deep_buffer_out" role="source" flags="DEEP_BUFFER">
+@@ -42,7 +46,7 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="INT_32_BIT" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000 352800 384000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="PCM" pcmType="FLOAT_32_BIT" />
+         </mixPort>
+-        <mixPort name="compress_offload_out" role="source" recommendedMuteDurationMs="190" flags="DIRECT COMPRESS_OFFLOAD NON_BLOCKING GAPLESS_OFFLOAD">
++        <mixPort name="compress_offload_out" role="source" flags="DIRECT COMPRESS_OFFLOAD NON_BLOCKING GAPLESS_OFFLOAD">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/mpeg" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO" formatType="NON_PCM" encoding="audio/flac" />
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_QUAD LAYOUT_PENTA LAYOUT_5POINT1 LAYOUT_6POINT1 LAYOUT_7POINT1" formatType="NON_PCM" encoding="audio/alac" />
+@@ -75,17 +79,9 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <mixPort name="primary_in" role="sink" maxOpenCount="2" maxActiveCount="2">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="compress_in" role="sink" flags="DIRECT">
+-            <profile name="compress-capture-AAC-LC" samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO LAYOUT_FRONT_BACK" formatType="NON_PCM" encoding="audio/mp4a.40.02" />
+-            <profile name="compress-capture-AAC-HE-V1" samplingRates="24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO LAYOUT_FRONT_BACK" formatType="NON_PCM" encoding="audio/aac-adts.05" />
+-            <profile name="compress-capture-AAC-HE-V2" samplingRates="24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO" formatType="NON_PCM" encoding="audio/aac-adts.29" />
+-        </mixPort>
+         <mixPort name="fast_input" role="sink" flags="FAST">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_2POINT0POINT2 LAYOUT_3POINT0POINT2 LAYOUT_5POINT1" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="fast_raw_input" role="sink" flags="FAST RAW">
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_2POINT0POINT2 LAYOUT_3POINT0POINT2 LAYOUT_5POINT1" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+-        </mixPort>
+         <mixPort name="voip_record" role="sink" flags="VOIP_TX">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO"
+                 formatType="PCM" pcmType="INT_16_BIT" />
+@@ -104,7 +100,7 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="FIXED_Q_8_24" />
+         </mixPort>
+         <mixPort name="hotword_input" role="sink" flags="HW_HOTWORD">
+-            <profile samplingRates="16000" channelLayouts="LAYOUT_MONO" formatType="PCM" pcmType="INT_16_BIT" />
++            <profile samplingRates="16000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+         <!-- end of sink mixports-->
+     </mixPorts>
+@@ -161,10 +157,10 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="bt_a2dp_speaker" deviceType="OUT_SPEAKER" connection="bt-a2dp" role="sink" encodings="audio/x-sbc audio/mp4a.40 audio/aptx audio/vnd.qcom.aptx.hd audio/vnd.sony.ldac audio/x-celt audio/vnd.qcom.aptx.adaptive audio/vnd.qcom.aptx.twsp audio/x-lc3">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="bt_ble_headset" deviceType="OUT_HEADSET" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3">
++        <devicePort tagName="bt_ble_headset" deviceType="OUT_HEADSET" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3 audio/vnd.qcom.aptx.adaptive.r4">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-        <devicePort tagName="bt_ble_speaker" deviceType="OUT_SPEAKER" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3">
++        <devicePort tagName="bt_ble_speaker" deviceType="OUT_SPEAKER" connection="bt-le" role="sink" encodings="audio/x-lc3 audio/vnd.qcom.aptx.adaptive.r3 audio/vnd.qcom.aptx.adaptive.r4">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+         <devicePort tagName="bt_ble_broadcast" deviceType="OUT_BROADCAST" connection="bt-le" role="sink" encodings="audio/x-lc3">
+@@ -199,7 +195,7 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <devicePort tagName="proxy_input_device" deviceType="IN_AFE_PROXY" connection="virtual" role="source">
+             <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+-         <!-- IN_DEVICE(ip-v4): Usage are not as per android expectation. Due to minimal use of device in regular use case, it is getting used for proxy device in record usecase -->
++        <!-- IN_DEVICE(ip-v4): Usage are not as per android expectation. Due to minimal use of device in regular use case, it is getting used for proxy device in record usecase -->
+         <devicePort tagName="ip_input_device" deviceType="IN_DEVICE" connection="ip-v4" role="source">
+             <profile samplingRates="8000 11025 16000 22050 32000 44100 48000 64000 88200 96000 128000 176400 192000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </devicePort>
+@@ -225,30 +221,30 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <!-- end of source DEVICE PORT -->
+     </devicePorts>
+     <routes>
+-        <route type="mix" sink="earpiece" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="earpiece" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
+ 
+-        <route type="mix" sink="wired_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="wired_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="wired_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
++        <route type="mix" sink="wired_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
+ 
+-        <route type="mix" sink="usb_device_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
+-        <route type="mix" sink="usb_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
++        <route type="mix" sink="usb_device_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
++        <route type="mix" sink="usb_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx,spatial_out" />
+ 
+-        <route type="mix" sink="bt_sco_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx" />
+-        <route type="mix" sink="bt_sco_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx" />
+-        <route type="mix" sink="bt_sco_car_kit" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_car_kit" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
+ 
+-        <route type="mix" sink="bt_a2dp_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_a2dp_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_a2dp_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out" />
++        <route type="mix" sink="bt_a2dp_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out" />
+ 
+-        <route type="mix" sink="bt_ble_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="bt_ble_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx,mmap_no_irq_out" />
++        <route type="mix" sink="bt_ble_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="bt_ble_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx,mmap_no_irq_out" />
+         <route type="mix" sink="bt_ble_broadcast" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out" />
+ 
+-        <route type="mix" sink="line_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="line_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
+ 
+-        <route type="mix" sink="hdmi_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out" />
++        <route type="mix" sink="hdmi_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out" />
+ 
+         <route type="mix" sink="proxy_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,haptics_out" />
+ 
+@@ -258,12 +254,10 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <!-- input routes -->
+         <route type="mix" sink="primary_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,fm_tuner_mic,telephony_rx,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device,ip_input_device" />
+         <route type="mix" sink="fast_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device,ip_input_device" />
+-        <route type="mix" sink="fast_raw_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device" />
+-        <route type="mix" sink="compress_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device,ip_input_device" />
+         <route type="mix" sink="telephony_tx" sources="voice_tx,in_call_music,built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,usb_mic,usb_headset_mic" />
+         <route type="mix" sink="mmap_no_irq_in" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic" />
+         <route type="mix" sink="voip_record" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,ip_input_device" />
+-        <route type="mix" sink="hotword_input" sources="built_in_mic,wired_headset_mic" />
++        <route type="mix" sink="hotword_input" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device" />
+         <route type="mix" sink="usb_surround_sound_input" sources="usb_mic,usb_headset_mic" />
+         <route type="mix" sink="voice_rx" sources="telephony_rx" />
+     </routes>
+diff --git a/configs/sun/audio_module_config_primary.xml b/configs/sun/audio_module_config_primary.xml
+index 84892aa4c..c9c6c1538 100644
+--- a/configs/sun/audio_module_config_primary.xml
++++ b/configs/sun/audio_module_config_primary.xml
+@@ -12,9 +12,13 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <mixPort name="low_latency_out" role="source" flags="FAST PRIMARY" maxOpenCount="2" maxActiveCount="2">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
++
++        <!--  heaton.zhong, 2023/02/10,Remove for disable ULL output
+         <mixPort name="raw_out" role="source" flags="FAST RAW">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
++        end by heaton.zhong, 2023/02/10 -->
++
+         <mixPort name="haptics_out" role="source" flags="FAST">
+             <profile samplingRates="48000" channelLayouts="LAYOUT_STEREO_HAPTIC_A" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+@@ -75,17 +79,9 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <mixPort name="primary_in" role="sink" maxOpenCount="2" maxActiveCount="2">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_FRONT_BACK" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="compress_in" role="sink" flags="DIRECT">
+-            <profile name="compress-capture-AAC-LC" samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO LAYOUT_FRONT_BACK" formatType="NON_PCM" encoding="audio/mp4a.40.02" />
+-            <profile name="compress-capture-AAC-HE-V1" samplingRates="24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO LAYOUT_MONO LAYOUT_FRONT_BACK" formatType="NON_PCM" encoding="audio/aac-adts.05" />
+-            <profile name="compress-capture-AAC-HE-V2" samplingRates="24000 32000 44100 48000" channelLayouts="LAYOUT_STEREO" formatType="NON_PCM" encoding="audio/aac-adts.29" />
+-        </mixPort>
+         <mixPort name="fast_input" role="sink" flags="FAST">
+             <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_2POINT0POINT2 LAYOUT_3POINT0POINT2 LAYOUT_5POINT1" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+         </mixPort>
+-        <mixPort name="fast_raw_input" role="sink" flags="FAST RAW">
+-            <profile samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" channelLayouts="LAYOUT_MONO LAYOUT_STEREO LAYOUT_2POINT1 LAYOUT_2POINT0POINT2 LAYOUT_3POINT0POINT2 LAYOUT_5POINT1" channelMasks="INDEX_MASK_3" formatType="PCM" pcmType="INT_16_BIT" />
+-        </mixPort>
+         <mixPort name="voip_record" role="sink" flags="VOIP_TX">
+             <profile samplingRates="8000 16000 32000 48000" channelLayouts="LAYOUT_MONO"
+                 formatType="PCM" pcmType="INT_16_BIT" />
+@@ -225,30 +221,30 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <!-- end of source DEVICE PORT -->
+     </devicePorts>
+     <routes>
+-        <route type="mix" sink="earpiece" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="earpiece" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
+ 
+-        <route type="mix" sink="wired_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="wired_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="wired_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
++        <route type="mix" sink="wired_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx,spatial_out" />
+ 
+-        <route type="mix" sink="usb_device_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
+-        <route type="mix" sink="usb_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
++        <route type="mix" sink="usb_device_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx" />
++        <route type="mix" sink="usb_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,hifi_playback,telephony_rx,spatial_out" />
+ 
+-        <route type="mix" sink="bt_sco_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx" />
+-        <route type="mix" sink="bt_sco_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx" />
+-        <route type="mix" sink="bt_sco_car_kit" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
++        <route type="mix" sink="bt_sco_car_kit" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx" />
+ 
+-        <route type="mix" sink="bt_a2dp_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_a2dp_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,spatial_out" />
+-        <route type="mix" sink="bt_a2dp_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out" />
++        <route type="mix" sink="bt_a2dp_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_headphones" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,spatial_out" />
++        <route type="mix" sink="bt_a2dp_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out" />
+ 
+-        <route type="mix" sink="bt_ble_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
+-        <route type="mix" sink="bt_ble_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out,spatial_out,telephony_rx,mmap_no_irq_out" />
++        <route type="mix" sink="bt_ble_speaker" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="bt_ble_headset" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out,spatial_out,telephony_rx,mmap_no_irq_out" />
+         <route type="mix" sink="bt_ble_broadcast" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out" />
+ 
+-        <route type="mix" sink="line_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,mmap_no_irq_out,haptics_out,telephony_rx" />
++        <route type="mix" sink="line_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,mmap_no_irq_out,haptics_out,telephony_rx" />
+ 
+-        <route type="mix" sink="hdmi_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,raw_out,haptics_out" />
++        <route type="mix" sink="hdmi_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,voip_playback,haptics_out" />
+ 
+         <route type="mix" sink="proxy_out" sources="low_latency_out,deep_buffer_out,direct_pcm_out,compress_offload_out,haptics_out" />
+ 
+@@ -258,8 +254,6 @@ SPDX-License-Identifier: BSD-3-Clause-Clear
+         <!-- input routes -->
+         <route type="mix" sink="primary_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,fm_tuner_mic,telephony_rx,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device,ip_input_device" />
+         <route type="mix" sink="fast_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device,ip_input_device" />
+-        <route type="mix" sink="fast_raw_input" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic,proxy_input_device,ip_input_device" />
+-        <route type="mix" sink="compress_in" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,proxy_input_device,ip_input_device" />
+         <route type="mix" sink="telephony_tx" sources="voice_tx,in_call_music,built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,usb_mic,usb_headset_mic" />
+         <route type="mix" sink="mmap_no_irq_in" sources="built_in_mic,built_in_back_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,wired_headset_mic" />
+         <route type="mix" sink="voip_record" sources="built_in_mic,built_in_back_mic,wired_headset_mic,bt_sco_headset_mic,usb_mic,usb_headset_mic,bt_a2dp_mic,echo_reference_mic,bt_le_mic,ip_input_device" />
+diff --git a/configs/sun/sun.mk b/configs/sun/sun.mk
+index a2fa28320..0079b0112 100644
+--- a/configs/sun/sun.mk
++++ b/configs/sun/sun.mk
+@@ -121,7 +121,7 @@ $(foreach DEVICE_SKU, $(QCV_FAMILY_SKUS), \
+     $(CONFIG_HAL_SRC_DIR)/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_$(DEVICE_SKU)_qssi/audio_policy_configuration.xml)
+ 
+ PRODUCT_COPY_FILES += \
+-    $(CONFIG_HAL_SRC_DIR)/audio_module_config_primary.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/audio_module_config_primary.xml
++    vendor/nothing/FroggerPro/etc/audio/audio_module_config_primary.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/audio_module_config_primary.xml
+ endif
+ 
+ # XML config file for memory logger
+@@ -175,7 +175,7 @@ PRODUCT_COPY_FILES += \
+     $(CONFIG_HAL_SRC_DIR)/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_$(DEVICE_SKU)_qssi/audio_policy_configuration.xml)
+ 
+ PRODUCT_COPY_FILES += \
+-    $(CONFIG_HAL_SRC_DIR)/audio_module_config_primary.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/audio_module_config_primary.xml
++    vendor/nothing/FroggerPro/etc/audio/audio_module_config_primary.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/audio_module_config_primary.xml
+ endif
+ 
+ # XML config file for memory logger
+@@ -227,7 +227,7 @@ PRODUCT_COPY_FILES += \
+     $(CONFIG_HAL_SRC_DIR)/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_$(DEVICE_SKU)_qssi/audio_policy_configuration.xml)
+ 
+ PRODUCT_COPY_FILES += \
+-    $(CONFIG_HAL_SRC_DIR)/audio_module_config_primary.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/audio_module_config_primary.xml
++    vendor/nothing/FroggerPro/etc/audio/audio_module_config_primary.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/audio_module_config_primary.xml
+ endif
+ 
+ # XML config file for memory logger
+diff --git a/hal/converter/Android.bp b/hal/converter/Android.bp
+index afaa66159..4988a668e 100644
+--- a/hal/converter/Android.bp
++++ b/hal/converter/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libaudioplatformconverter.qti",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: [
+         "latest_android_hardware_audio_core_ndk_shared",
+         "latest_android_media_audio_common_types_ndk_shared",
+diff --git a/hal/core/Android.bp b/hal/core/Android.bp
+index 05215fd7f..284e168e3 100644
+--- a/hal/core/Android.bp
++++ b/hal/core/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libaudiocorehal.qti",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: [
+         "latest_android_hardware_audio_core_ndk_shared",
+         "latest_android_hardware_audio_core_sounddose_ndk_shared",
+diff --git a/hal/core/extensions/Android.bp b/hal/core/extensions/Android.bp
+index af5befa0e..f28cc193b 100644
+--- a/hal/core/extensions/Android.bp
++++ b/hal/core/extensions/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libhfp_pal",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     vendor: true,
+ 
+     cflags: [
+@@ -45,6 +48,9 @@ cc_library_shared {
+ 
+ cc_library_shared {
+     name: "libfmpal",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     vendor: true,
+ 
+     cflags: [
+diff --git a/hal/default/Android.bp b/hal/default/Android.bp
+index b2241f973..be89bf9b9 100644
+--- a/hal/default/Android.bp
++++ b/hal/default/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libaudiocorehal.default",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: [
+         "latest_android_hardware_audio_core_ndk_shared",
+         "latest_android_media_audio_common_types_ndk_shared",
+diff --git a/hal/effects/Android.bp b/hal/effects/Android.bp
+index aaaca52bd..c60f5fd0d 100644
+--- a/hal/effects/Android.bp
++++ b/hal/effects/Android.bp
+@@ -49,6 +49,9 @@ cc_library_static {
+ 
+ cc_library_shared {
+     name: "libaudioeffecthal.qti",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: ["aidlaudioeffectserviceqti_defaults"],
+     owner: "qti",
+     relative_install_path: "hw",
+diff --git a/hal/effects/qcom-effects/offloadbundle/Android.bp b/hal/effects/qcom-effects/offloadbundle/Android.bp
+index bb272e99a..9627301c6 100644
+--- a/hal/effects/qcom-effects/offloadbundle/Android.bp
++++ b/hal/effects/qcom-effects/offloadbundle/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libqcompostprocbundle",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: ["aidlaudioeffectserviceqti_defaults"],
+     owner: "qti",
+     relative_install_path: "soundfx",
+diff --git a/hal/effects/qcom-effects/offloadvisualizer/Android.bp b/hal/effects/qcom-effects/offloadvisualizer/Android.bp
+index e118d5487..fd14e7bf3 100644
+--- a/hal/effects/qcom-effects/offloadvisualizer/Android.bp
++++ b/hal/effects/qcom-effects/offloadvisualizer/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libqcomvisualizer",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: ["aidlaudioeffectserviceqti_defaults"],
+     owner: "qti",
+     relative_install_path: "soundfx",
+diff --git a/hal/effects/qcom-effects/voiceprocessing/Android.bp b/hal/effects/qcom-effects/voiceprocessing/Android.bp
+index 1249be0aa..27cfd71ea 100644
+--- a/hal/effects/qcom-effects/voiceprocessing/Android.bp
++++ b/hal/effects/qcom-effects/voiceprocessing/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libqcomvoiceprocessing",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: ["aidlaudioeffectserviceqti_defaults"],
+     owner: "qti",
+     relative_install_path: "soundfx",
+diff --git a/hal/effects/qcom-effects/volumelistener/Android.bp b/hal/effects/qcom-effects/volumelistener/Android.bp
+index 6c8a61cc4..57447ad84 100644
+--- a/hal/effects/qcom-effects/volumelistener/Android.bp
++++ b/hal/effects/qcom-effects/volumelistener/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libvolumelistener",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: ["aidlaudioeffectserviceqti_defaults"],
+     owner: "qti",
+     relative_install_path: "soundfx",

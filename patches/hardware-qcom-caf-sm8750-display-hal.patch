@@ -1,0 +1,140 @@
+# hardware/qcom-caf/sm8750/display/hal/
+diff --git a/composer/Android.bp b/composer/Android.bp
+index f6d5e3e5d6..730d4f368d 100644
+--- a/composer/Android.bp
++++ b/composer/Android.bp
+@@ -127,52 +127,6 @@ prebuilt_etc_xml {
+     vendor: true,
+ }
+ 
+-cc_fuzz {
+-    name: "displayconfig.aidl_fuzzer",
+-    defaults: [
+-        "qtidisplay_defaults",
+-        "composer-service_defaults",
+-        "composer3_defaults",
+-    ],
+-
+-    vendor: true,
+-
+-    static_libs: [
+-        "libbinder_random_parcel",
+-    ],
+-
+-    header_libs: [
+-        "libcutils_headers",
+-    ],
+-
+-    shared_libs: [
+-        "libbinder_ndk",
+-        "libbinder",
+-        "libutils",
+-        "libjsoncpp",
+-        "libbase",
+-        "libcutils",
+-    ],
+-
+-    srcs: [
+-        "AidlComposerClient.cpp",
+-        "AidlComposer.cpp",
+-        "AidlComposerHandleImporter.cpp",
+-        "DisplayConfigAIDL.cpp",
+-        "fuzzer.cpp",
+-        "gl_color_convert.cpp",
+-        "gl_color_convert_impl.cpp",
+-        "gl_common.cpp",
+-        "gl_layer_stitch.cpp",
+-        "gl_layer_stitch_impl.cpp",
+-        "hwc_buffer_allocator.cpp",
+-        "hwc_buffer_sync_handler.cpp",
+-        "hwc_common.cpp",
+-        "hwc_socket_handler.cpp",
+-        "QServiceBackend.cpp",
+-        "QtiComposer3Client.cpp",
+-    ],
+-}
+ 
+ soong_config_module_type {
+     name: "qticomposer3_cc_defaults",
+diff --git a/gralloc/Android.bp b/gralloc/Android.bp
+index c68a7caec5..7364c5c086 100644
+--- a/gralloc/Android.bp
++++ b/gralloc/Android.bp
+@@ -342,62 +342,8 @@ cc_binary {
+         "QtiAllocatorAIDL.cpp",
+         "service.cpp",
+     ],
+-    init_rc: ["vendor.qti.hardware.display.allocator-service.rc"],
+-    vintf_fragments: ["vendor.qti.hardware.display.allocator-service.xml"],
++    // 2026-10-02 C182：這兩個檔改由 froggerpro_display_prebuilts 的 prebuilt 模組安裝
++    // （prefer: true 取代本模組後，本模組的 install 步驟不會進安裝集 檔案會缺；
++    //   若兩邊都宣告 -> kati 報 overriding commands -> 必須只留一邊）
+ }
+ 
+-cc_fuzz {
+-    name: "aidl_fuzzer_display_gralloc",
+-    defaults: ["qtidisplay_alloc_defaults"],
+-    vendor: true,
+-
+-    header_libs: [
+-        "display_headers",
+-        "snapalloc_interface_headers",
+-        "common_interface_headers",
+-        "libimapper_stablec",
+-        "libimapper_providerutils",
+-    ],
+-    shared_libs: [
+-        "libbinder",
+-        "libbinder_ndk",
+-        "libhidlbase",
+-        "libgrallocutils",
+-        "libgralloccore",
+-        "libgralloctypes",
+-        "vendor.qti.hardware.display.allocator@3.0",
+-        "vendor.qti.hardware.display.allocator@4.0",
+-        "vendor.qti.hardware.display.mapper@3.0",
+-        "vendor.qti.hardware.display.mapper@4.0",
+-        "android.hardware.graphics.mapper@4.0",
+-        "android.hardware.graphics.mapper@3.0",
+-        "android.hardware.graphics.mapper@2.1",
+-        "android.hardware.graphics.allocator@4.0",
+-        "android.hardware.graphics.allocator@3.0",
+-        "vendor.qti.hardware.display.mapperextensions@1.0",
+-        "vendor.qti.hardware.display.mapperextensions@1.1",
+-        "libdmabufheap",
+-        "vendor.qti.hardware.display.mapperextensions@1.2",
+-        "vendor.qti.hardware.display.mapperextensions@1.3",
+-        "android.hardware.graphics.allocator-V2-ndk",
+-        "libjsoncpp",
+-        "libgralloc.qti",
+-        "libutilscallstack",
+-        "libvndksupport",
+-        "libbase",
+-        "libutils",
+-        "libcutils",
+-    ],
+-    static_libs: [
+-        "libaidlcommonsupport",
+-        "libbinder_random_parcel",
+-    ],
+-    cflags: [
+-        "-DLOG_TAG=\"qdgralloc\"",
+-        "-D__QTI_DISPLAY_GRALLOC__",
+-    ],
+-    srcs: [
+-        "QtiAllocatorAIDL.cpp",
+-        "fuzzer/fuzzer.cpp",
+-    ],
+-}
+\ No newline at end of file
+diff --git a/qmaa/Android.bp b/qmaa/Android.bp
+index 9695d8fc6f..64ed88fa2e 100644
+--- a/qmaa/Android.bp
++++ b/qmaa/Android.bp
+@@ -1,5 +1,6 @@
+ soong_namespace {
+     imports: [
++        "vendor/qcom/opensource/commonsys-intf/display",
+         "hardware/qcom-caf/sm8750",
+     ],
+ }

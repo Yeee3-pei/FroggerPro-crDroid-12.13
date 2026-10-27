@@ -1,0 +1,26 @@
+# hardware/libhardware/
+diff --git a/modules/fingerprint/Android.bp b/modules/fingerprint/Android.bp
+index 5c95374b..7306e5bf 100644
+--- a/modules/fingerprint/Android.bp
++++ b/modules/fingerprint/Android.bp
+@@ -25,6 +25,20 @@ cc_library_shared {
+     name: "fingerprint.default",
+     relative_install_path: "hw",
+     proprietary: true,
++    // Not installable on purpose.
++    //
++    // This module is AOSP's demo fingerprint HAL: its own description string is "Demo Fingerprint HAL" and every
++    // operation returns FINGERPRINT_ERROR. It installs to vendor/lib64/hw/fingerprint.default.so - the path
++    // hw_get_module("fingerprint") resolves - so on a device with a real HAL it is worse than useless: it
++    // silently shadows the vendor's own implementation. Nothing that ships should contain it.
++    //
++    // It also cannot be displaced by a PRODUCT_COPY_FILES rule. `mka` builds with --all-modules, so Soong's
++    // install map carries a rule for every module's output, whether or not the product selects it; kati then
++    // rejects a copy rule for the same destination with "overriding commands for target ...". Making the module
++    // install nothing removes that rule, which is what lets missing_vendor_blobs.mk place the phone's own
++    // Goodix build at that path. (Filtering the name out of PRODUCT_PACKAGES does not help - the name is not in
++    // PRODUCT_PACKAGES to begin with.)
++    installable: false,
+     srcs: ["fingerprint.c"],
+     cflags: ["-Wall", "-Werror"],
+     header_libs: ["libhardware_headers"],

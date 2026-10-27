@@ -1,0 +1,87 @@
+# hardware/qcom-caf/sm8750/audio/agm/
+diff --git a/ipc/aidl/client/Android.bp b/ipc/aidl/client/Android.bp
+index d88d076b..7fcca97b 100644
+--- a/ipc/aidl/client/Android.bp
++++ b/ipc/aidl/client/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libagmclient",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
+diff --git a/ipc/aidl/server/Android.bp b/ipc/aidl/server/Android.bp
+index dab8f0ae..c20def67 100644
+--- a/ipc/aidl/server/Android.bp
++++ b/ipc/aidl/server/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libagmipcservice",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
+diff --git a/plugins/tinyalsa/Android.bp b/plugins/tinyalsa/Android.bp
+index 6188abd4..5d56878d 100644
+--- a/plugins/tinyalsa/Android.bp
++++ b/plugins/tinyalsa/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libagm_pcm_plugin",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: [
+         "qtiaudio_dynamic_log_defaults",
+     ],
+@@ -27,6 +30,9 @@ cc_library_shared {
+ 
+ cc_library_shared {
+     name: "libagm_mixer_plugin",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: [
+         "qtiaudio_dynamic_log_defaults",
+     ],
+@@ -52,6 +58,9 @@ cc_library_shared {
+ 
+ cc_library_shared {
+     name: "libagm_compress_plugin",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: [
+         "qtiaudio_dynamic_log_defaults",
+     ],
+diff --git a/service/Android.bp b/service/Android.bp
+index b839b2a8..719a7bd3 100644
+--- a/service/Android.bp
++++ b/service/Android.bp
+@@ -6,6 +6,9 @@ cc_library_headers {
+ 
+ cc_library_shared {
+     name: "libagm",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     defaults: [
+         "qtiaudio_dynamic_log_defaults",
+     ],
+diff --git a/snd_parser/Android.bp b/snd_parser/Android.bp
+index 2d0eac91..430d7205 100644
+--- a/snd_parser/Android.bp
++++ b/snd_parser/Android.bp
+@@ -1,5 +1,8 @@
+ cc_library_shared {
+     name: "libsndcardparser",
++    // Shipped as the phone\'s own binary instead: this module cannot be built here, or its vendor
++    // variant cannot be named in PRODUCT_PACKAGES. See missing_vendor_blobs.mk.
++    installable: false,
+     owner: "qti",
+     vendor: true,
+ 
